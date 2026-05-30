@@ -4,41 +4,40 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Reviews\Store;
 use App\Http\Requests\Reviews\Update;
-use App\Models\Review;
+use App\Repositories\Contracts\ReviewRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller {
 
+    public function __construct(private ReviewRepositoryInterface $reviewRepository) {}
+
     public function index($productId) {
-        $reviews = Review::with('user')->where('product_id', $productId)->limit(5)->get();
+        $reviews = $this->reviewRepository->getByProductId($productId, 5);
         return response()->json(['reviews' => $reviews], 200);
     }
 
     public function store(Store $request) {
         $data            = $request->validated();
         $data['user_id'] = auth()->id();
-        $review          = Review::create($data);
+        $review          = $this->reviewRepository->create($data);
         return response()->json(['review' => $review], 201);
     }
 
     public function update(Update $request, $id) {
-        $review = Review::findOrFail($id);
-        if ($review->user_id !== Auth::id()) {
+        if (!$this->reviewRepository->isOwnedBy($id, Auth::id())) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $review->update($request->validated());
+        $review = $this->reviewRepository->update($id, $request->validated());
         return response()->json(['review' => $review]);
     }
 
     public function destroy($id) {
-        $review = Review::findOrFail($id);
-
-        if ($review->user_id != Auth::id()) {
+        if (!$this->reviewRepository->isOwnedBy($id, Auth::id())) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $review->delete();
+        $this->reviewRepository->delete($id);
         return response()->json(['message' => 'Review deleted']);
     }
 

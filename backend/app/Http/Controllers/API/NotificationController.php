@@ -1,19 +1,21 @@
 <?php
 
+namespace App\Http\Controllers\API;
+
 use App\Http\Controllers\Controller;
+use App\Repositories\Contracts\NotificationRepositoryInterface;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    public function __construct(private NotificationRepositoryInterface $notificationRepository) {}
 
     /**
      * GET /api/notifications - Get user notifications
      */
     public function index(Request $request)
     {
-        $notifications = auth()->user()->notifications()
-            ->orderByDesc('created_at')
-            ->paginate(15);
+        $notifications = $this->notificationRepository->getUserNotifications(auth()->id(), 15);
 
         return response()->json([
             'status' => 'success',
@@ -26,7 +28,7 @@ class NotificationController extends Controller
      */
     public function show($id)
     {
-        $notification = auth()->user()->notifications()->find($id);
+        $notification = $this->notificationRepository->getUserNotificationById(auth()->id(), $id);
 
         if (!$notification) {
             return response()->json([
@@ -41,12 +43,12 @@ class NotificationController extends Controller
         ]);
     }
 
-       /**
+    /**
      * PUT /api/notifications/{id}/read - Mark as read
      */
     public function markAsRead($id)
     {
-        $notification = auth()->user()->notifications()->find($id);
+        $notification = $this->notificationRepository->getUserNotificationById(auth()->id(), $id);
 
         if (!$notification) {
             return response()->json([
@@ -55,7 +57,7 @@ class NotificationController extends Controller
             ], 404);
         }
 
-        $notification->markAsRead();
+        $this->notificationRepository->markAsRead(auth()->id(), $id);
 
         return response()->json([
             'status'  => 'success',
@@ -63,12 +65,12 @@ class NotificationController extends Controller
         ]);
     }
 
-      /**
+    /**
      * DELETE /api/notifications/{id} - Delete notification
      */
     public function destroy($id)
     {
-        $notification = auth()->user()->notifications()->find($id);
+        $notification = $this->notificationRepository->getUserNotificationById(auth()->id(), $id);
 
         if (!$notification) {
             return response()->json([
@@ -77,7 +79,7 @@ class NotificationController extends Controller
             ], 404);
         }
 
-        $notification->delete();
+        $this->notificationRepository->delete(auth()->id(), $id);
 
         return response()->json([
             'status'  => 'success',
@@ -85,13 +87,12 @@ class NotificationController extends Controller
         ]);
     }
 
-
-      /**
+    /**
      * GET /api/notifications/unread-count - Count unread
      */
     public function unreadCount()
     {
-        $count = auth()->user()->unreadNotifications()->count();
+        $count = $this->notificationRepository->getUnreadCount(auth()->id());
 
         return response()->json([
             'status' => 'success',
@@ -99,3 +100,4 @@ class NotificationController extends Controller
         ]);
     }
 }
+

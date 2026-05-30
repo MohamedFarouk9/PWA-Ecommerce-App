@@ -3,17 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Services\Payments\PaymentService;
+use App\Repositories\Contracts\PaymentRepositoryInterface;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    protected $paymentService ;
-
-    public function __construct(PaymentService $paymentService)
-    {
-        $this->paymentService = $paymentService;
-    }
+    public function __construct(private PaymentRepositoryInterface $paymentRepository) {}
 
     public function charge(Request $request)
     {
@@ -22,12 +17,12 @@ class PaymentController extends Controller
             'gateway' => 'required|string',
         ]);
 
-        $result = $this->paymentService->charge($validated);
+        $result = $this->paymentRepository->charge($validated);
         return response()->json($result);
     }
 
     public function handleWebhook(Request $request)
     {
-        return $this->paymentService->webhook($request->all());
+        return $this->paymentRepository->webhook($request->all());
     }
 }
