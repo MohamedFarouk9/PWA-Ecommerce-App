@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class PermissionController extends Controller
 {
@@ -15,9 +14,9 @@ class PermissionController extends Controller
      */
     public function index()
     {
-        $permissions = Cache::remember('admin.permissions.index', 3600, function () {
-            return Permission::with('roles')->orderBy('name')->get();
-        });
+        $permissions = Permission::with('roles')
+            ->orderBy('name')
+            ->get();
 
         $permissionGroups = $permissions->groupBy(function ($permission) {
             return explode('.', $permission->name)[0];
@@ -32,7 +31,6 @@ class PermissionController extends Controller
     public function create()
     {
         $roles = Role::orderBy('name')->get();
-
         return view('admin.permissions.create', compact('roles'));
     }
 
@@ -56,8 +54,6 @@ class PermissionController extends Controller
             $permission->roles()->sync($request->roles);
         }
 
-        Cache::tags(['permissions', 'admin'])->flush();
-
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission created successfully.');
     }
@@ -78,13 +74,7 @@ class PermissionController extends Controller
      */
     public function edit(Permission $permission)
     {
-        // Prevent editing of system permissions
-        if (in_array($permission->name, [
-            'dashboard.view',
-            'users.view', 'users.create', 'users.edit', 'users.delete',
-            'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
-            'permissions.view', 'permissions.create', 'permissions.edit', 'permissions.delete'
-        ])) {
+        if ($this->isSystemPermission($permission->name)) {
             return redirect()->route('admin.permissions.index')
                 ->with('error', 'System permissions cannot be edited.');
         }
@@ -100,13 +90,7 @@ class PermissionController extends Controller
      */
     public function update(Request $request, Permission $permission)
     {
-        // Prevent editing of system permissions
-        if (in_array($permission->name, [
-            'dashboard.view',
-            'users.view', 'users.create', 'users.edit', 'users.delete',
-            'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
-            'permissions.view', 'permissions.create', 'permissions.edit', 'permissions.delete'
-        ])) {
+        if ($this->isSystemPermission($permission->name)) {
             return redirect()->route('admin.permissions.index')
                 ->with('error', 'System permissions cannot be modified.');
         }
@@ -117,32 +101,22 @@ class PermissionController extends Controller
             'roles.*' => 'exists:roles,id'
         ]);
 
-        $permission->update([
-            'name' => $request->name
-        ]);
+        $permission->update(['name' => $request->name]);
 
         if ($request->has('roles')) {
             $permission->roles()->sync($request->roles);
         }
-
-        Cache::tags(['permissions', 'admin'])->flush();
 
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission updated successfully.');
     }
 
     /**
-     * Remove the specified permission
+     * Delete the specified permission
      */
     public function destroy(Permission $permission)
     {
-        // Prevent deletion of system permissions
-        if (in_array($permission->name, [
-            'dashboard.view',
-            'users.view', 'users.create', 'users.edit', 'users.delete',
-            'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
-            'permissions.view', 'permissions.create', 'permissions.edit', 'permissions.delete'
-        ])) {
+        if ($this->isSystemPermission($permission->name)) {
             return redirect()->route('admin.permissions.index')
                 ->with('error', 'System permissions cannot be deleted.');
         }
@@ -154,10 +128,23 @@ class PermissionController extends Controller
 
         $permission->delete();
 
-        Cache::flush();
-
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission deleted successfully.');
+    }
+
+    /**
+     * Check if permission is a system permission
+     */
+    private function isSystemPermission(string $name): bool
+    {
+        $systemPermissions = [
+            'dashboard.view',
+            'users.view', 'users.create', 'users.edit', 'users.delete',
+            'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
+            'permissions.view', 'permissions.create', 'permissions.edit', 'permissions.delete'
+        ];
+
+        return in_array($name, $systemPermissions);
     }
 }
 

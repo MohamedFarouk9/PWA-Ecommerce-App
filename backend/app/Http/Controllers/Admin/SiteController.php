@@ -3,27 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SiteContent;
-use App\Models\SiteSetting;
+use App\Repositories\Contracts\Admin\AdminSiteRepositoryInterface;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Cache;
 
 class SiteController extends Controller
 {
     use ResponseTrait;
+
+    public function __construct(private AdminSiteRepositoryInterface $siteRepository) {}
 
     /**
      * Get content by type
      */
     public function getContent($type)
     {
-        $content = Cache::remember("content.{$type}", 3600, function() use ($type) {
-            return SiteContent::where('type', $type)
-                ->latest()
-                ->first();
-        });
+        $content = $this->siteRepository->getContent($type);
 
         if (!$content) {
             return $this->response('error', 'Content not found');
@@ -48,15 +43,9 @@ class SiteController extends Controller
             'type' => 'required|in:about,refund,privacy,purchase_guide'
         ]);
 
-        $content = SiteContent::updateOrCreate(
-            ['type' => $type],
-            [
-                'content' => $request->content,
-                'version' => Str::random(10)
-            ]
-        );
-
-        Cache::forget("content.{$type}");
+        $content = $this->siteRepository->updateContent($type, [
+            'content' => $request->content
+        ]);
 
         return $this->successReturn(
             'Content updated successfully',
@@ -69,9 +58,7 @@ class SiteController extends Controller
      */
     public function getSettings()
     {
-        $settings = Cache::remember('site_settings', 3600, function() {
-            return SiteSetting::pluck('value', 'key')->toArray();
-        });
+        $settings = $this->siteRepository->getSettings();
 
         return $this->successReturn(
             'Settings retrieved successfully',
@@ -84,23 +71,21 @@ class SiteController extends Controller
      */
     public function updateSettings(Request $request)
     {
+        $data = $request->all();
+
+        // Validate common settings if needed
         $request->validate([
-            'settings' => 'required|array',
-            'settings.*' => 'required|string'
+            'site_name' => 'string|max:255',
+            'contact_email' => 'email',
+            'site_logo' => 'string'
         ]);
 
-        foreach ($request->settings as $key => $value) {
-            SiteSetting::updateOrCreate(
-                ['key' => $key],
-                ['value' => $value]
-            );
-        }
-
-        Cache::forget('site_settings');
+        $updated = $this->siteRepository->updateSettings($data);
 
         return $this->successReturn(
             'Settings updated successfully',
-            $request->settings
+            $updated
         );
     }
 }
+

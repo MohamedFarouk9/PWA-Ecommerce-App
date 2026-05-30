@@ -3,15 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\Order;
-use App\Models\User;
-use App\Models\Review;
 use App\Models\Contact;
-use App\Models\Slider;
-use App\Models\SiteSetting;
-use App\Models\SiteContent;
-use App\Models\Notification;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\ProductReview;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -19,36 +15,33 @@ use Carbon\Carbon;
 class DashboardController extends Controller
 {
     /**
-     * Display the admin dashboard.
+     * Display the admin dashboard
      */
     public function index()
     {
-        // Get dashboard statistics
-        // $stats = $this->getDashboardStats();
-
-        // // Get chart data
-        // $chartData = $this->getChartData();
-
-        // // Get recent data
-        // $recentOrders = $this->getRecentOrders();
-        // $recentReviews = $this->getRecentReviews();
-        // $topProducts = $this->getTopProducts();
-
         return view('admin.dashboard');
     }
 
     /**
-     * Get dashboard statistics.
+     * Get dashboard statistics
      */
     public function stats()
     {
-        $stats = $this->getDashboardStats();
+        $stats = [
+            'total_products' => Product::count(),
+            'total_users' => User::count(),
+            'total_orders' => Order::count(),
+            'total_reviews' => ProductReview::count(),
+            'total_contacts' => Contact::count(),
+            'active_products' => Product::where('status', 'published')->count(),
+            'pending_contacts' => Contact::whereNull('read_at')->count(),
+        ];
 
         return response()->json($stats);
     }
 
     /**
-     * Search functionality.
+     * Search functionality
      */
     public function search(Request $request)
     {
@@ -58,21 +51,23 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        $searchTerm = "%{$query}%";
+
         // Search in products
-        $products = Product::where('title', 'like', "%{$query}%")
-            ->orWhere('description', 'like', "%{$query}%")
+        $products = Product::where('title', 'like', $searchTerm)
+            ->orWhere('description', 'like', $searchTerm)
             ->limit(5)
             ->get();
 
         // Search in orders
-        $orders = Order::where('order_number', 'like', "%{$query}%")
-            ->orWhere('customer_name', 'like', "%{$query}%")
+        $orders = Order::where('order_number', 'like', $searchTerm)
+            ->orWhere('customer_name', 'like', $searchTerm)
             ->limit(5)
             ->get();
 
         // Search in customers
-        $customers = User::where('name', 'like', "%{$query}%")
-            ->orWhere('email', 'like', "%{$query}%")
+        $customers = User::where('name', 'like', $searchTerm)
+            ->orWhere('email', 'like', $searchTerm)
             ->limit(5)
             ->get();
 
@@ -217,7 +212,7 @@ class DashboardController extends Controller
      */
     private function getRecentReviews()
     {
-        return Review::with('product', 'user')
+        return ProductReview::with('product', 'user')
             ->latest()
             ->limit(5)
             ->get()

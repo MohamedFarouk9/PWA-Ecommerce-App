@@ -3,77 +3,101 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Slider;
-use Illuminate\Http\Request;
 use App\Http\Requests\Admin\Sliders\StoreRequest;
 use App\Http\Requests\Admin\Sliders\UpdateRequest;
+use App\Repositories\Contracts\Admin\AdminSliderRepositoryInterface;
 
 class SliderController extends Controller
 {
+    public function __construct(private AdminSliderRepositoryInterface $sliderRepository) {}
+
+    /**
+     * Get active sliders (API endpoint)
+     */
     public function sliders()
     {
-        $sliders = Slider::limit(3)->get();
+        $sliders = $this->sliderRepository->getAll();
+        $active = collect($sliders)->where('is_active', true)->take(3);
 
-        if($sliders->isEmpty()){
-            return response()->json(['message'=> 'No sliders available now'] , 404);
+        if ($active->isEmpty()) {
+            return response()->json(['message' => 'No sliders available now'], 404);
         }
 
-        return response()->json(['sliders' => $sliders], 200);
+        return response()->json(['sliders' => $active], 200);
     }
 
-    // Display a listing of the sliders.
+    /**
+     * Display a listing of sliders
+     */
     public function index()
     {
-        $sliders = Slider::all();
+        $sliders = $this->sliderRepository->getAll();
         return view('admin.sliders.index', compact('sliders'));
     }
 
-    // Show the form for creating a new slider.
+    /**
+     * Show the form for creating a new slider
+     */
     public function create()
     {
         return view('admin.sliders.create');
     }
 
-    // Store a newly created slider in storage.
+    /**
+     * Store a newly created slider
+     */
     public function store(StoreRequest $request)
     {
-        $validated = $request->validated();
-        $slider = new Slider();
-        $slider->is_active = $validated['is_active'] ?? true;
-        if (isset($validated['image'])) {
-            $slider->image = $validated['image'];
-        }
-        $slider->save();
+        $slider = $this->sliderRepository->create($request->validated());
+
         return redirect()->route('admin.sliders.index')->with('success', 'Slider created successfully.');
     }
 
-    // Display the specified slider.
-    public function show(Slider $slider)
+    /**
+     * Display the specified slider
+     */
+    public function show($id)
     {
+        $slider = $this->sliderRepository->find($id);
         return view('admin.sliders.show', compact('slider'));
     }
 
-    // Show the form for editing the specified slider.
-    public function edit(Slider $slider)
+    /**
+     * Show the form for editing a slider
+     */
+    public function edit($id)
     {
+        $slider = $this->sliderRepository->find($id);
         return view('admin.sliders.edit', compact('slider'));
     }
 
-    // Update the specified slider in storage.
-    public function update(UpdateRequest $request, Slider $slider)
+    /**
+     * Update the specified slider
+     */
+    public function update(UpdateRequest $request, $id)
     {
-        $slider->is_active = $request->input('is_active', $slider->is_active);
-        if ($request->hasFile('image')) {
-            $slider->image = $request->file('image');
-        }
-        $slider->save();
+        $this->sliderRepository->update($id, $request->validated());
+
         return redirect()->route('admin.sliders.index')->with('success', 'Slider updated successfully.');
     }
 
-    // Remove the specified slider from storage.
-    public function destroy(Slider $slider)
+    /**
+     * Delete the specified slider
+     */
+    public function destroy($id)
     {
-        $slider->delete();
+        $this->sliderRepository->delete($id);
+
         return response()->json(['message' => 'Slider deleted successfully']);
+    }
+
+    /**
+     * Toggle slider active status
+     */
+    public function toggleActive($id)
+    {
+        $this->sliderRepository->toggleActive($id);
+
+        return response()->json(['message' => 'Slider status updated successfully']);
     }
 }

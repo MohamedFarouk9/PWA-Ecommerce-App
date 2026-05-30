@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController;
 // use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
-// use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\CustomerController;
 // use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ContactController;
@@ -91,11 +91,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
     Route::patch('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
     // Orders
-    // Route::resource('orders', OrderController::class);
-    // Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-    // Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
-    // Route::post('orders/bulk-action', [OrderController::class, 'bulkAction'])->name('orders.bulk-action');
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
+    Route::patch('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+    Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+    Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::get('orders/{order}/tracking', [OrderController::class, 'tracking'])->name('orders.tracking');
 
     // Customers
     // Route::resource('customers', CustomerController::class);

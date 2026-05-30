@@ -1,25 +1,28 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateProfileRequest;
-use App\Models\User;
+use App\Repositories\Contracts\AdminUserRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
+    public function __construct(private AdminUserRepositoryInterface $userRepository) {}
+
     /**
      * Admin profile
      */
-
     public function AdminProfile()
     {
         $user = auth()->user();
-        if (! $user || $user->role !== 'admin') {
+        
+        if (!$user || !$this->userRepository->isAdmin($user->id)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
+
         return view('admin.profile.profile')->with('user', $user);
     }
 
@@ -28,24 +31,24 @@ class AdminController extends Controller
      */
     public function updateAdminProfile(UpdateProfileRequest $request)
     {
-        // dd(request()->all());
         $user = auth()->user();
-        if (! $user || ! in_array($user->role, ['admin'])) {
+        
+        if (!$user || !$this->userRepository->isAdmin($user->id)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        $data = $request->validated(); // 🔐 Only validated data
-        // if (! empty($data['password'])) {
-        //     $data['password'] = $request->password;
-        // } else {
-        //     unset($data['password']); // Remove password if not provided
-        // }
-        $user->update($data);
-        $user->refresh();
 
-        return response()->json(['message' => 'Profile updated successfully.', 'user' => $user], 200);
+        $data = $request->validated();
+        $updated = $this->userRepository->updateProfile($user->id, $data);
+
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            'user' => $updated
+        ], 200);
     }
 
-
+    /**
+     * Show change password form
+     */
     public function changePassword()
     {
         $user = auth()->user();
@@ -53,23 +56,27 @@ class AdminController extends Controller
     }
 
     /**
-     * Admin update Password
+     * Update password
      */
     public function updatePassword(Request $request)
     {
         $user = auth()->user();
-        if (! $user || $user->role !== 'admin') {
+        
+        if (!$user || !$this->userRepository->isAdmin($user->id)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
+
         $request->validate([
             'current_password' => 'required',
-            'password'         => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6|confirmed',
         ]);
-        if (! Hash::check($request->current_password, $user->password)) {
+
+        if (!$this->userRepository->verifyPassword($user->id, $request->current_password)) {
             return response()->json(['message' => 'Current password is incorrect'], 400);
         }
-        $user->password = $request->password;
-        $user->save();
+
+        $this->userRepository->updatePassword($user->id, $request->password);
+
         return response()->json(['message' => 'Password changed successfully'], 200);
     }
 
