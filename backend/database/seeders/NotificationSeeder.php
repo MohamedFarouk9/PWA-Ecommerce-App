@@ -34,21 +34,27 @@ class NotificationSeeder extends Seeder {
         // Create notifications for each user
         foreach ($users as $user) {
             Notification::create([
-                'title'           => 'Welcome to Our Application',
-                'message'         => 'Thank you for joining us, ' . $user->name . '!',
-                'is_read'         => $faker->boolean,
-                'read_at'         => $faker->boolean ? $faker->dateTimeThisYear() : null,
-                'notifiable_id'   => $user->id,
-                'notifiable_type' => User::class,
+                'user_id'   => $user->id,
+                'type'      => 'welcome',
+                'title'     => 'Welcome to Our Application',
+                'message'   => 'Thank you for joining us, ' . $user->name . '!',
+                'status'    => $faker->randomElement(['pending', 'sent', 'read']),
+                'channel'   => $faker->randomElement(['email', 'realtime']),
+                'read_at'   => $faker->boolean(30) ? now()->subDays($faker->numberBetween(0, 30)) : null,
+                'sent_at'   => $faker->boolean(80) ? now()->subDays($faker->numberBetween(0, 30)) : null,
+                'data'      => json_encode(['user_name' => $user->name]),
             ]);
 
             Notification::create([
-                'title'           => 'New Feature Released',
-                'message'         => 'Check out the latest features in our application.',
-                'is_read'         => $faker->boolean,
-                'read_at'         => $faker->boolean ? $faker->dateTimeThisYear() : null,
-                'notifiable_id'   => $user->id,
-                'notifiable_type' => User::class,
+                'user_id'   => $user->id,
+                'type'      => 'promotional',
+                'title'     => 'New Feature Released',
+                'message'   => 'Check out the latest features in our application.',
+                'status'    => $faker->randomElement(['pending', 'sent', 'read']),
+                'channel'   => $faker->randomElement(['email', 'realtime']),
+                'read_at'   => $faker->boolean(30) ? now()->subDays($faker->numberBetween(0, 30)) : null,
+                'sent_at'   => $faker->boolean(80) ? now()->subDays($faker->numberBetween(0, 30)) : null,
+                'data'      => json_encode(['feature' => 'new_dashboard']),
             ]);
         }
 

@@ -27,21 +27,19 @@ class NotificationLogSeeder extends Seeder
         }
 
         $channels = ['email', 'database', 'broadcast', 'sms'];
-        $statuses = ['sent', 'failed', 'pending', 'delivered'];
+        $statuses = ['sent', 'failed', 'pending', 'bounced'];
 
         // Create logs for each notification
         foreach ($notifications as $notification) {
             for ($i = 0; $i < $faker->numberBetween(1, 3); $i++) {
                 NotificationLogs::create([
                     'notification_id' => $notification->id,
-                    'channel' => $faker->randomElement($channels),
-                    'status' => $faker->randomElement($statuses),
-                    'recipient_email' => $notification->notifiable?->email ?? $faker->email,
-                    'response' => $faker->optional(0.7)->text(100),
-                    'error_message' => $faker->optional(0.3)->text(50),
-                    'sent_at' => $faker->optional(0.8)->dateTimeThisYear(),
-                    'created_at' => $faker->dateTimeThisYear(),
-                    'updated_at' => $faker->dateTimeThisYear(),
+                    'channel'         => $faker->randomElement($channels),
+                    'status'          => $faker->randomElement($statuses),
+                    'response'        => $faker->optional(0.7)->text(100),
+                    'error_message'   => $faker->optional(0.3)->text(50),
+                    'attempt'         => $faker->numberBetween(1, 3),
+                    'sent_at'         => $faker->optional(0.8)->dateTimeThisYear(),
                 ]);
             }
         }
