@@ -4,7 +4,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import MegaMenu from "./MegaMenu";
 import HomeSlider from "./HomeSlider";
-import axios from "axios";
+import apiClient from "../../services/apiClient";
 import AppURL from "../../utils/AppURL";
 import ToastMessages from "../../toast-messages/toast";
 import Skeleton from "react-loading-skeleton";
@@ -22,8 +22,8 @@ function HomeTop() {
     const fetchData = async () => {
       try {
         const [menuResponse, sliderResponse] = await Promise.allSettled([
-          axios.get(AppURL.CategoryDetails),
-          axios.get(AppURL.Sliders),
+          apiClient.get(AppURL.CategoryDetails),
+          apiClient.get(AppURL.Sliders),
         ]);
 
         // Handle menu response
@@ -35,8 +35,28 @@ function HomeTop() {
         setMenuLoading(false);
         // Handle slider response
         if (sliderResponse.status === "fulfilled") {
-          setSliderData(sliderResponse.value.data.data.sliders);
+          console.log("Slider API response:", sliderResponse.value.data); // DEBUG
+          let sliders = [];
+          const responseData = sliderResponse.value.data.data;
+          
+          // Handle paginated response (has .data property for actual items)
+          if (responseData?.sliders?.data) {
+            sliders = responseData.sliders.data;
+          } 
+          // Handle non-paginated response (direct array)
+          else if (responseData?.sliders && Array.isArray(responseData.sliders)) {
+            sliders = responseData.sliders;
+          }
+          // Handle direct array response
+          else if (Array.isArray(responseData?.sliders)) {
+            sliders = responseData.sliders;
+          }
+          
+          console.log("Extracted sliders:", sliders); // DEBUG
+          setSliderData(Array.isArray(sliders) ? sliders : []);
         } else {
+          console.error("Failed to load sliders:", sliderResponse.reason);
+          setSliderData([]);
           ToastMessages.showError("Failed to load sliders");
         }
         setSliderLoading(false);

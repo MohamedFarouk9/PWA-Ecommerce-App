@@ -1,23 +1,24 @@
-import axios from "axios";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import AppURL from "./AppURL";
-import { AuthContext } from "./AuthContext";
+import apiClient from "../services/apiClient";
 
 
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
     const [cart, setCart] = useState([]);
-    const { token } = useContext(AuthContext); // Get token from AuthContext
     const [loading, setLoading] = useState(true);
 
     // Fetch cart items from API
     const fetchCart = useCallback(async () => {
         try {
-            const response = await axios.get(AppURL.getCart);
-            setCart(response.data);
+            const response = await apiClient.get(AppURL.getCart);
+            // Handle different API response structures
+            const cartData = response.data.data || response.data || [];
+            setCart(Array.isArray(cartData) ? cartData : []);
         } catch (error) {
             console.error("Error fetching cart:", error);
+            setCart([]); // Fallback to empty cart
         } finally {
             setLoading(false);
         }
@@ -30,13 +31,9 @@ export const CartProvider = ({ children }) => {
 
     const addToCart = async (product, quantity) => {
         try {
-            const response = await axios.post(AppURL.addToCart, {
+            const response = await apiClient.post(AppURL.addToCart, {
                 product_id: product.id,
                 quantity,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
             });
             //All existing cart items (...prev) Creates a shallow copy 
             //The newly added item (response.data) 
@@ -57,7 +54,7 @@ export const CartProvider = ({ children }) => {
 
     const updateCart = async (id, quantity) => {
         try {
-            await axios.post(AppURL.updateCart, { product_id: id, quantity });
+            await apiClient.post(AppURL.updateCart, { product_id: id, quantity });
             //...item: This is useful for immutability, ensuring we do not modify the original object directly.
             setCart((prev) => prev.map((item) => (item.product_id === id ? { ...item, quantity } : item)));
         } catch (error) {
@@ -68,7 +65,7 @@ export const CartProvider = ({ children }) => {
     const removeFromCart = async (id) => {
         try {
             setCart((prev) => prev.filter((item) => item.id !== id))
-            await axios.delete(`${AppURL.removeFromCart}/${id}`);
+            await apiClient.delete(`${AppURL.removeFromCart(id)}`);
         } catch (error) {
             console.error("Error removing from cart:", error);
             fetchCart(); // Reload if error occurs

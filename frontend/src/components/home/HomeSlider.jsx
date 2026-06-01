@@ -4,6 +4,9 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 const HomeSlider = ({ data = [] }) => {
+  // Ensure data is always an array
+  const sliderData = Array.isArray(data) ? data : [];
+
   var settings = {
     dots: true,
     infinite: true,
@@ -43,7 +46,7 @@ const HomeSlider = ({ data = [] }) => {
   };
 
   const renderSlides = () => {
-    if (!data || data.length === 0) {
+    if (!sliderData || sliderData.length === 0) {
       return (
         <div>
           <img
@@ -55,20 +58,20 @@ const HomeSlider = ({ data = [] }) => {
       );
     }
 
-  return data.map((slider, index) => (
-    <div key={slider.id || index}>
-      <img
-        className="slider-img"
-        src={slider.image}
-        alt={`slider-${index + 1}`}
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = "/images/default-slider.jpg";
-        }}
-      />
-    </div>
-  ));
-};
+    return sliderData.map((slider, index) => (
+      <div key={slider.id || index}>
+        <img
+          className="slider-img"
+          src={slider.image}
+          alt={`slider-${index + 1}`}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "/images/default-slider.jpg";
+          }}
+        />
+      </div>
+    ));
+  };
 
   return (
     <div className="slider-container">

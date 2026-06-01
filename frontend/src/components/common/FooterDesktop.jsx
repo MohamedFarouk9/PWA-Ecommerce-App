@@ -3,8 +3,8 @@ import { Col, Container, Row, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import Apple from "../../assets/images/apple.png";
 import Google from "../../assets/images/google.png";
-import parse from "html-react-parser";
 import { useSiteSettings } from "../../hooks/useSiteSettings";
+import { safeParse } from "../../utils/htmlParser";
 
 const FooterDesktop = () => {
   const { settings, isLoading } = useSiteSettings();
@@ -27,7 +27,7 @@ const FooterDesktop = () => {
               ) : (
                 <>
                   <h5 className="footer-menu-title">OFFICE ADDRESS</h5>
-                  {parse(settings.address)}
+                  {safeParse(settings.address)}
                   <h5 className="footer-menu-title">SOCIAL LINK</h5>
                   <a href={settings.facebookLink} target="_blank" rel="noreferrer">
                     <i className="fab m-1 h4 fa-facebook"></i>
@@ -101,7 +101,7 @@ const FooterDesktop = () => {
         <Container fluid={true} className="text-center m-0 pt-3 pb-1 bg-dark">
           <Container>
             <Row>
-              <h6 className="text-white">{parse(settings.copyrightText)}</h6>
+              <h6 className="text-white">{safeParse(settings.copyrightText)}</h6>
             </Row>
           </Container>
         </Container>

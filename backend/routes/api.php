@@ -71,7 +71,6 @@ Route::post('/payment/charge', [PaymentController::class, 'charge']);
 Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook']);
 
 Route::post('/post-contact', [ContactController::class, 'postContact']);
-Route::get('/categories', [ApiCategoryController::class, 'categories']);
 
 //products
 Route::get('/products', [ProductController::class, 'getAllPublished']);

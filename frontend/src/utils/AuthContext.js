@@ -1,56 +1,51 @@
-import axios from "axios";
-import { createContext, useCallback, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import AppURL from "./AppURL";
+import apiClient from "../services/apiClient";
 
-//createContext is a feature in React that allows you to create a context for sharing data (like state, functions, or other values) 
-// across your component tree without having to pass props manually at every leve
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [token, setToken] = useState(localStorage.getItem("token"));
+    const [token, setToken] = useState(localStorage.getItem("auth_token"));
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true); // Add loading state
-    
-
-
-
-    const fetchUserData = useCallback(async () => {
-        if (token) {
-            try {
-                const response = await axios.get(AppURL.UserProfile, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-
-                setUser(response.data)
-            } catch (error) {
-                console.error("Error fetching user data:", error);
-                logout(); // Clear token if it's invalid
-            } finally {
-                setLoading(false); // Stop loading
-            }
-        } else {
-            setLoading(false); // Stop loading if no token
-        }
-    }, [token]);  // Memoized with `useCallback` so it doesn’t change on every render
-
-    const login = (newToken) => {
-        localStorage.setItem("token", newToken);
-        setToken(newToken);
-        fetchUserData();
-    };
-
-    // Function to handle logout
+    const [loading, setLoading] = useState(false); // Start with false - only load on token change
+    const [hasFetched, setHasFetched] = useState(false);
 
     const logout = () => {
-        localStorage.removeItem("token");
+        localStorage.removeItem("auth_token");
         setToken(null);
         setUser(null);
+        setHasFetched(false);
     };
 
-    // Fetch user data when token changes
+    const login = (newToken) => {
+        localStorage.setItem("auth_token", newToken);
+        setToken(newToken);
+        setHasFetched(false);
+    };
+
+    // Only fetch user data if token exists AND we haven't fetched yet
     useEffect(() => {
-        fetchUserData();
-    }, [fetchUserData]);
+        if (token && !hasFetched) {
+            setLoading(true);
+            setHasFetched(true);
+            const fetchUserData = async () => {
+                try {
+                    const response = await apiClient.get(AppURL.UserProfile);
+                    setUser(response.data);
+                    setLoading(false);
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    // Token is invalid/expired, clear everything
+                    localStorage.removeItem("auth_token");
+                    setToken(null);
+                    setUser(null);
+                    setLoading(false);
+                    // Don't reset hasFetched - we already tried and failed
+                }
+            };
+            fetchUserData();
+        }
+    }, [token, hasFetched]);
 
     return (
         <AuthContext.Provider value={{ token, user, login, logout, loading }}>
@@ -58,4 +53,3 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
-
