@@ -1,23 +1,37 @@
 <?php
+
 namespace App\Providers;
 
-use App\Contracts\PaymentGatewayInterface;
-use App\Services\Payments\PaymobGateway;
-use App\Services\Payments\StripeGateway;
+use App\Services\Payments\PaymentGatewayFactory;
+use App\Services\Payments\PaymentProcessor;
+use App\Services\Payments\PaymentService;
 use Illuminate\Support\ServiceProvider;
 
 class PaymentServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->app->bind(PaymentGatewayInterface::class, function ($app) {
-            $gateway = request()->get('gateway', 'stripe');
-
-            return match ($gateway) {
-                'stripe' => new StripeGateway(),
-                'paymob' => new PaymobGateway(),
-                default  => new StripeGateway(),
-            };
+        // Register factory
+        $this->app->singleton(PaymentGatewayFactory::class, function () {
+            return new PaymentGatewayFactory();
         });
+
+        // Register processor
+        $this->app->singleton(PaymentProcessor::class, function ($app) {
+            return new PaymentProcessor($app->make(PaymentGatewayFactory::class));
+        });
+
+        // Register payment service
+        $this->app->singleton(PaymentService::class, function ($app) {
+            return new PaymentService(
+                $app->make(PaymentProcessor::class),
+                $app->make(PaymentGatewayFactory::class),
+            );
+        });
+    }
+
+    public function boot()
+    {
+        //
     }
 }

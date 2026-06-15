@@ -1,24 +1,32 @@
 <?php
+
 namespace App\Services\Payments;
 
-use App\Contracts\PaymentGatewayInterface;
+use App\DTOs\PaymentRequestDTO;
+use App\DTOs\PaymentResultDTO;
 
 class PaymentService
 {
-    protected $gataway;
+    public function __construct(
+        private PaymentProcessor $processor,
+        private PaymentGatewayFactory $factory,
+    ) {}
 
-    public function __construct(PaymentGatewayInterface $gataway)
+    public function processPayment(array $data): PaymentResultDTO
     {
-        $this->gataway = $gataway;
+        $paymentRequest = PaymentRequestDTO::make($data);
+        return $this->processor->process($paymentRequest);
     }
 
-    public function charge(array $data)
+    public function refund(string $gateway, string $transactionId, float $amount): array
     {
-        return $this->gataway->chagre($data);
+        $gatewayInstance = $this->factory->create($gateway);
+        return $gatewayInstance->refund($transactionId, $amount);
     }
 
-    public function webhook(array $payload)
+    public function handleWebhook(string $gateway, array $payload): array
     {
-        return $this->gataway->handleWebhook($payload);
+        $gatewayInstance = $this->factory->create($gateway);
+        return $gatewayInstance->handleWebhook($payload);
     }
 }

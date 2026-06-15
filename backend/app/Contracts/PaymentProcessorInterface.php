@@ -3,6 +3,7 @@
 namespace App\Contracts;
 
 use App\DTOs\PaymentRequestDTO;
+use App\DTOs\PaymentResultDTO;
 
 interface PaymentProcessorInterface
 {
