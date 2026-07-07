@@ -14,10 +14,13 @@ use Illuminate\Support\Facades\Log;
 class PaymentProcessor implements PaymentProcessorInterface
 {
     private array $handlers = [];
+    private ?IdempotencyHandler $idempotencyHandler = null;
 
     public function __construct(
         private PaymentGatewayFactory $factory,
+        ?IdempotencyHandler $idempotencyHandler = null,
     ) {
+        $this->idempotencyHandler = $idempotencyHandler;
         // Chain of handlers (order matters)
         $this->handlers = [
             new ValidationHandler(),
@@ -26,34 +29,79 @@ class PaymentProcessor implements PaymentProcessorInterface
         ];
     }
 
-    public function process(PaymentRequestDTO $paymentRequest): PaymentResultDTO
-    {
+    public function process(
+        PaymentRequestDTO $paymentRequest,
+        ?string $idempotencyKey = null // NEW parameter
+    ): PaymentResultDTO {
         try {
-            // Execute handler chain
+            // Step 1: Check for duplicate request (NEW)
+            if ($idempotencyKey) {
+                $cachedResult = $this->idempotencyHandler->checkDuplicate($idempotencyKey);
+
+                if ($cachedResult) {
+                    Log::info('Idempotent request - returning cached result', [
+                        'order_id' => $paymentRequest->orderId,
+                        'idempotency_key' => $idempotencyKey,
+                    ]);
+
+                    return $cachedResult; // Return immediately!
+                }
+
+                // Store as pending (NEW)
+                $this->idempotencyHandler->store(
+                    $idempotencyKey,
+                    $paymentRequest->gateway,
+                    $paymentRequest->orderId,
+                    $paymentRequest->customerId,
+                    (array) $paymentRequest,
+                    'pending'
+                );
+            }
+
+            // Step 2: Execute handler chain
             foreach ($this->handlers as $handler) {
                 if (!$handler->canHandle($paymentRequest)) {
                     continue;
                 }
                 $result = $handler->handle($paymentRequest);
                 if ($result) {
+                    // Mark as failed in idempotency table (NEW)
+                    if ($idempotencyKey) {
+                        $this->idempotencyHandler->markCompleted($idempotencyKey, $result);
+                    }
                     return $result;
                 }
             }
 
-            // Execute actual payment
-            return $this->executePayment($paymentRequest);
+            // Step 3: Execute actual payment
+            $result = $this->executePayment($paymentRequest);
+
+            // Step 4: Mark as completed in idempotency table (NEW)
+            if ($idempotencyKey) {
+                $this->idempotencyHandler->markCompleted($idempotencyKey, $result);
+            }
+
+            return $result;
 
         } catch (Exception $e) {
             Log::error('Payment processing error', [
                 'order_id' => $paymentRequest->orderId,
                 'gateway' => $paymentRequest->gateway,
                 'error' => $e->getMessage(),
+                'idempotency_key' => $idempotencyKey ?? 'none',
             ]);
 
-            return PaymentResultDTO::failed(
+            $result = PaymentResultDTO::failed(
                 $paymentRequest->gateway,
                 $e->getMessage()
             );
+
+            // Mark as failed (NEW)
+            if ($idempotencyKey) {
+                $this->idempotencyHandler->markCompleted($idempotencyKey, $result);
+            }
+
+            return $result;
         }
     }
 

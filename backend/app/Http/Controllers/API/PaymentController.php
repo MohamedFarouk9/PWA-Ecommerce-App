@@ -22,9 +22,17 @@ class PaymentController extends Controller
             'customer_id' => 'required|string',
             'metadata' => 'nullable|array',
             'retries' => 'nullable|integer|min:1|max:5',
+            'idempotency_key' => 'nullable|string|max:255', // NEW
         ]);
 
-        $result = $this->paymentService->processPayment($validated);
+        // Get or generate idempotency key
+        $idempotencyKey = $validated['idempotency_key']
+            ?? $this->paymentService->generateIdempotencyKey($validated);
+
+        $result = $this->paymentService->processPayment(
+            $validated,
+            $idempotencyKey // NEW
+        );
 
         return response()->json([
             'success' => $result->success,
@@ -33,6 +41,7 @@ class PaymentController extends Controller
             'status' => $result->status,
             'error' => $result->errorMessage,
             'metadata' => $result->metadata,
+            'idempotency_key' => $idempotencyKey, // NEW - return to client
         ], $result->success ? 200 : 400);
     }
 

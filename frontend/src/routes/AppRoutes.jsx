@@ -13,6 +13,7 @@ import ResetPassword from "../components/Auth/ResetPassword";
 import Notification from "../components/common/Notification";
 import Contact from "../components/common/Contact";
 import Cart from "../components/Cart/Cart";
+import PaymentPage from "../components/Cart/PaymentPage";
 import Favourite from "../components/common/Favourite";
 import Category from "../components/categories/Category";
 import SubCategory from '../components/categories/SubCategory';
@@ -28,6 +29,7 @@ const AppRoutes = () => {
       <Route path="/notification" element={<Notification />} />
       <Route path="/favourite" element={<Favourite />} />
       <Route path="/cart" element={<Cart />} />
+      <Route path="/payment" element={<PaymentPage />} />
       <Route path="/:slug" element={<Category />} />
       <Route path="/:category_slug/:subCategory_slug" element={<SubCategory />} />
       <Route path="/search/:searchKey" element={<SearchPage />} />

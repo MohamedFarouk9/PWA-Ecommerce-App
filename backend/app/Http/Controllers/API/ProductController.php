@@ -89,13 +89,44 @@ class ProductController extends Controller
      */
     public function getProductById($id)
     {
+        return $this->buildProductResponse($id);
+    }
+
+    public function getProductDetails($id)
+    {
+        return $this->buildProductResponse($id);
+    }
+
+    public function getRelatedProducts($productId)
+    {
+        $results = $this->productRepository->getRelatedProducts($productId, 6);
+
+        if ($results->isEmpty()) {
+            return response()->json(['message' => 'No related products found'], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'related_products' => ProductResource::collection($results),
+            ],
+        ], 200);
+    }
+
+    private function buildProductResponse($id)
+    {
         $product = $this->productRepository->getById($id);
 
         if (! $product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
-        // return response()->json(['status' => 'success', 'data' => ['product' => $product]]);
-        return new ProductResource($product);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'product' => new ProductResource($product),
+            ],
+        ], 200);
     }
 
     /*

@@ -13,8 +13,9 @@ return new class extends Migration
             $table->foreignId('product_category_id')->constrained()->restrictOnDelete();
             $table->string('name');
             $table->text('description');
-            $table->decimal('price');
+            $table->decimal('price', 10, 2);
             $table->integer('quantity');
+            $table->string('image')->nullable();
             $table->foreignId('product_status_id')->default(1)->constrained('product_statuses')->onDelete('restrict');
             $table->timestamps();
             $table->softDeletes();

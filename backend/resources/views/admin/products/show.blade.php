@@ -26,9 +26,8 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <div class="mb-3">
-                            @php($cover = $product->getFirstMediaUrl('cover'))
-                            @if($cover)
-                                <img src="{{ $cover }}" alt="Product Image"
+                            @if($product->images->count())
+                                <img src="{{ $product->images->first()->url }}" alt="Product Image"
                                      class="img-fluid rounded shadow" style="max-width: 250px; max-height: 250px; object-fit: cover;">
                             @else
                                 <div class="bg-light rounded shadow d-flex align-items-center justify-content-center"
@@ -40,6 +39,16 @@
                                 </div>
                             @endif
                         </div>
+                        @if($product->images->count())
+                            <div class="row g-2">
+                                @foreach($product->images as $img)
+                                    <div class="col-3">
+                                        <img src="{{ $img->url }}" alt="Product Image {{ $loop->iteration }}"
+                                             class="img-fluid rounded shadow" style="width: 100%; height: 100px; object-fit: cover;">
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                         <h5 class="card-title">{{ $product->name }}</h5>
                         <div class="mb-3">
                             <span class="badge bg-{{ $product->status ? 'success' : 'danger' }} fs-6 px-3 py-2">

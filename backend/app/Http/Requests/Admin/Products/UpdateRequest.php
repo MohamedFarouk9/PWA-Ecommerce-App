@@ -31,6 +31,8 @@ final class UpdateRequest extends FormRequest
             'variants.*.value' => 'required_with:variants|string|max:255',
             'variants.*.additional_price' => 'nullable|numeric|min:0',
             'variants.*.quantity' => 'nullable|integer|min:0',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ];
     }
 }

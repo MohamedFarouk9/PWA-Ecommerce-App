@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder {
             ProductAttributeSeeder::class,
             SectionSeeder::class,
             ProductSeeder::class,
+            ProductImageSeeder::class,
             ProductVariantSeeder::class,
             ProductTagSeeder::class,
             ProductReviewSeeder::class,

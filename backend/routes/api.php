@@ -75,7 +75,7 @@ Route::post('/post-contact', [ContactController::class, 'postContact']);
 //products
 Route::get('/products', [ProductController::class, 'getAllPublished']);
 Route::get('/product/{id}', [ProductController::class, 'getProductById']);
-Route::get('/related-product/{id}', [ProductController::class, 'RelatedProducts']);
+Route::get('/related-product/{id}', [ProductController::class, 'getRelatedProducts']);
 Route::get('/latest-products', [ProductController::class, 'LastestProducts']);
 Route::get('/products/homepage-sections', [ProductController::class, 'homepageSections']);
 Route::get('/products/category/{slug}', [ProductController::class, 'getProductsByCategory']);
@@ -96,8 +96,8 @@ Route::get('/sliders/search', [SliderController::class, 'search']);
 Route::get('/sliders/{id}', [SliderController::class, 'show']);
 
 //product_details
-Route::get('/product-details/{id}', [ProductDetailsController::class, 'productDetails']);
-Route::get('/related-product/{product_id}', [ProductDetailsController::class, 'relatedProduct']);
+Route::get('/product-details/{id}', [ProductController::class, 'getProductDetails']);
+Route::get('/related-product/{product_id}', [ProductController::class, 'getRelatedProducts']);
 
 //notifications
 Route::get('/notifications', [NotificationController::class, 'index']);

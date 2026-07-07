@@ -4,12 +4,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
-
-class Product extends Model implements HasMedia
+class Product extends Model
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -24,6 +21,33 @@ class Product extends Model implements HasMedia
     {
         return $this->hasMany(ProductReview::class , 'product_id' , 'id');
     }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class, 'product_id', 'id')->orderBy('position');
+    }
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->relationLoaded('images') && $this->images->isNotEmpty()) {
+            return asset('storage/' . $this->images->first()->path);
+        }
+
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+
+        return null;
+    }
+
+    /**
+     * Compatibility method used in views: getFirstMediaUrl('cover')
+     */
+    public function getFirstMediaUrl($collection = 'cover')
+    {
+        return $this->getImageUrlAttribute();
+    }
+
     // This allows each product to have multiple versions/variants.
     public function productVariants()
     {
@@ -53,13 +77,6 @@ class Product extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('cover')->singleFile();
-        $this->addMediaCollection('gallery');
+        // No-op: media collections removed. Images are stored in `image` column.
     }
-
-    public function getImageUrlAttribute()
-    {
-        return $this->getFirstMediaUrl('cover') ?: null;
-    }
-
 }

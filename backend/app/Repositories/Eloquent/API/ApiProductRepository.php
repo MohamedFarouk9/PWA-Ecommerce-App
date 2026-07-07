@@ -54,13 +54,9 @@ class ApiProductRepository implements ApiProductRepositoryInterface
      */
     public function getById($id)
     {
-        $cacheKey = "product:{$id}:v1";
-
-        // return Cache::remember($cacheKey, 300, function () use ($id) { // 5 minutes
         return $this->model
-            ->with(['category', 'tags', 'productVariants.productAttribute', 'reviews'])
+            ->with(['category', 'status', 'tags', 'productVariants.productAttribute', 'reviews', 'sections', 'images'])
             ->find($id);
-        // });
     }
 
     /**

@@ -143,8 +143,9 @@
                                     <img id="showImage" src="" alt="Preview" class="img-fluid rounded shadow"
                                         style="max-width: 200px; max-height: 200px; object-fit: cover; display: none;">
                                 </div>
-                                <input type="file" name="image" id="image" class="form-control"
-                                    accept="image/*">
+                                <input type="file" name="images[]" id="images" class="form-control"
+                                    accept="image/*" multiple>
+                                <small class="text-muted d-block mt-2">You may upload multiple product images.</small>
                                 <small class="text-muted">Recommended: 400x400px or larger</small>
                             </div>
                         </div>
@@ -171,12 +172,16 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            $("#image").change(function(e) {
+            $("#images").change(function(e) {
+                var file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     $('#showImage').attr('src', e.target.result).show();
                 }
-                reader.readAsDataURL(e.target.files[0]);
+                reader.readAsDataURL(file);
             });
 
             // Variants dynamic rows

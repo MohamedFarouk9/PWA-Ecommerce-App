@@ -11,14 +11,25 @@ export const CartProvider = ({ children }) => {
 
     // Fetch cart items from API
     const fetchCart = useCallback(async () => {
+        const token = localStorage.getItem("auth_token");
+
+        if (!token) {
+            setCart([]);
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await apiClient.get(AppURL.getCart);
-            // Handle different API response structures
             const cartData = response.data.data || response.data || [];
             setCart(Array.isArray(cartData) ? cartData : []);
         } catch (error) {
-            console.error("Error fetching cart:", error);
-            setCart([]); // Fallback to empty cart
+            if (error.response?.status === 401) {
+                setCart([]);
+            } else {
+                console.error("Error fetching cart:", error);
+                setCart([]);
+            }
         } finally {
             setLoading(false);
         }

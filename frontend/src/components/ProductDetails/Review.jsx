@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
 import { Col, Container } from "react-bootstrap";
 import AppURL from "../../utils/AppURL";
@@ -6,6 +5,7 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ToastMessages from "../../toast-messages/toast";
 import { AuthContext } from "../../utils/AuthContext";
+import apiClient from "../../services/apiClient";
 
 const Review = ({ product_id }) => {
   const [reviewData, setReviewData] = useState([]);
@@ -17,9 +17,7 @@ const Review = ({ product_id }) => {
     const fetchReviews = async () => {
       if (!token) return; // Get token and loading state from context
       try {
-        const response = await axios.get(AppURL.reviews(product_id), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await apiClient.get(AppURL.reviews(product_id));
         // console.log(response);
         setReviewData(response.data.reviews);
       } catch (error) {

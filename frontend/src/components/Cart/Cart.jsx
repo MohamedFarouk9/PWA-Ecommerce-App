@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import Product1 from "../../assets/images/product/product1.png";
 import { ResponsiveLayout } from "../../layouts/ResponsiveLayout";
 
 const Cart = () => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -118,7 +121,20 @@ const Cart = () => {
                     <Col md={4} lg={4} sm={6} xs={6}>
                       <h5>Total Items = {totalQuantity}</h5>
                       <h5>Total Price = ${totalPrice}</h5>
-                      <Button className="btn btn-block w-100 mt-3 site-btn">
+                      <Button
+                        className="btn btn-block w-100 mt-3 site-btn"
+                        onClick={() =>
+                          navigate("/payment", {
+                            state: {
+                              order: {
+                                items: cartItems,
+                                totalQuantity,
+                                totalPrice,
+                              },
+                            },
+                          })
+                        }
+                      >
                         <i className="fa fa-shopping-cart"></i> CheckOut
                       </Button>
                     </Col>

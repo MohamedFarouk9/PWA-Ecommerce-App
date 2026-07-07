@@ -20,7 +20,7 @@ class AdminProductRepository implements AdminProductRepositoryInterface
     public function getDetails(int $productId)
     {
         return $this->model
-            ->with(['productDetails', 'category.subcategories'])
+            ->with(['productDetails', 'category.subcategories', 'images'])
             ->findOrFail($productId);
     }
 

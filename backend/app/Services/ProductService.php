@@ -9,6 +9,7 @@ use App\Models\Section;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 final class ProductService
 {
@@ -66,9 +67,14 @@ final class ProductService
     public function delete(Product $product): void
     {
         DB::transaction(function () use ($product) {
+            $product->load('images');
+            foreach ($product->images as $image) {
+                Storage::disk('public')->delete($image->path);
+            }
             $product->tags()->detach();
             $product->sections()->detach();
             $product->productVariants()->delete();
+            $product->images()->delete();
             $product->delete();
         });
     }

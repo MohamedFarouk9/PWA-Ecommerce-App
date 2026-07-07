@@ -3,7 +3,7 @@ import { Container, Row, Col, Card } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import axios from "axios";
+import apiClient from "../../services/apiClient";
 import AppURL from "../../utils/AppURL";
 import ToastMessages from "../../toast-messages/toast";
 
@@ -15,11 +15,18 @@ const SuggestedProduct = ({ product_id }) => {
   useEffect(() => {
     // Fetch related products from the backend API
     const fetchRelatedProducts = async () => {
+      if (!product_id) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(AppURL.relatedProduct(product_id));
-        setRelatedProducts(response.data.related_products);
-      } catch (error) {
-        setError(ToastMessages.showError(error.response.data.message));
+        const response = await apiClient.get(AppURL.relatedProduct(product_id));
+        const data = response.data?.data?.related_products ?? response.data?.related_products ?? response.data;
+        setRelatedProducts(data || []);
+      } catch (err) {
+        const msg = err?.response?.data?.message || "Failed to load related products.";
+        setError(ToastMessages.showError(msg));
       } finally {
         setLoading(false);
       }
@@ -77,7 +84,7 @@ const SuggestedProduct = ({ product_id }) => {
         <Card className="image-box card">
           <img
             className="center"
-            src={product.image}
+            src={product.image || product.product_details?.image_one}
             alt={product.title}
             style={{ height: "200px", objectFit: "cover" }}
           />

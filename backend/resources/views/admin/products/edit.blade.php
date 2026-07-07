@@ -185,22 +185,31 @@
                         </div>
                         <div class="card-body text-center">
                             <div class="mb-3">
-                                @php($cover = $product->getFirstMediaUrl('cover'))
-                                @if($cover)
-                                    <img id="showImage" src="{{ $cover }}" alt="Product Preview"
-                                         class="img-fluid rounded shadow" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                @if($product->images->count())
+                                    <div class="row g-2">
+                                        @foreach($product->images as $img)
+                                            <div class="col-4">
+                                                <img src="{{ $img->url }}" alt="Product Image {{ $loop->iteration }}"
+                                                     class="img-fluid rounded shadow" style="width: 100%; height: 120px; object-fit: cover;">
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 @else
                                     <div class="bg-light rounded shadow d-flex align-items-center justify-content-center"
                                          style="width: 200px; height: 200px; margin: 0 auto;">
                                         <div class="text-muted text-center">
                                             <i class="bx bx-image fs-1"></i>
-                                            <p class="mb-0 mt-2">No Image</p>
+                                            <p class="mb-0 mt-2">No Images</p>
                                         </div>
                                     </div>
                                 @endif
                             </div>
-                            <input type="file" name="image" id="image" class="form-control @error('image') is-invalid @enderror"
-                                   accept="image/*">
+                            <input type="file" name="images[]" id="images" class="form-control @error('images') is-invalid @enderror"
+                                   accept="image/*" multiple>
+                            @error('images')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted d-block mt-2">Upload new images to replace the current product gallery.</small>
                             @error('image')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -234,12 +243,16 @@
 @push('scripts')
 <script>
     $(document).ready(function(){
-        $("#image").change(function(e){
+        $("#images").change(function(e){
+            var file = e.target.files[0];
+            if (!file) {
+                return;
+            }
             var reader = new FileReader();
             reader.onload = function(e){
                 $('#showImage').attr('src', e.target.result);
             }
-            reader.readAsDataURL(e.target.files[0]);
+            reader.readAsDataURL(file);
         });
 
         // Variants functionality

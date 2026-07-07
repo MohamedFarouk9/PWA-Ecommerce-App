@@ -14,13 +14,14 @@ const ProductDetails = ({ productData, message }) => {
   const [qty, setQuantity] = useState(1);
   const { token } = useContext(AuthContext); // Get token and loading state from context
   const { addToCart } = useContext(CartContext);
-  const [errorMessage, setErrorMessage] = useState(""); // State for error message
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (productData?.product?.image) {
-      setPreviewImg(productData.product.image);
-    }
+    const productImages = productData?.product?.images?.length
+      ? productData.product.images.map((img) => img.url || img.path).filter(Boolean)
+      : [productData?.product?.image].filter(Boolean);
+
+    setPreviewImg(productImages[0] ?? null);
   }, [productData]);
 
   // Handle the case where productData is not loaded yet
@@ -47,13 +48,8 @@ const ProductDetails = ({ productData, message }) => {
     product_code,
     remark,
     special_price,
-    star,
     product_id,
     product_details: {
-      image_one,
-      image_two,
-      image_three,
-      image_four,
       color,
       size,
       short_description,
@@ -61,16 +57,15 @@ const ProductDetails = ({ productData, message }) => {
     } = {},
   } = productData.product;
 
+  // Ensure we have a usable product id (some APIs return `id`, others `product_id`)
+  const actualProductId = product_id ?? productData.product.id ?? null;
+
   const handleQuantityChange = (e) => {
     const value = parseInt(e.target.value, 10);
     if (value > stockQuantity) {
-      setErrorMessage(
-        ToastMessages.showWarning(
-          `Sorry, we only have ${stockQuantity} units in stock.`
-        )
+      ToastMessages.showWarning(
+        `Sorry, we only have ${stockQuantity} units in stock.`
       );
-    } else {
-      setErrorMessage("");
     }
     setQuantity(value >= 1 ? value : 1); // Ensure quantity doesn't go below 1
   };
@@ -88,10 +83,8 @@ const ProductDetails = ({ productData, message }) => {
 
   const handleAddToCart = async () => {
     if (qty > stockQuantity) {
-      setErrorMessage(
-        ToastMessages.showWarning(
-          `Sorry, we only have ${stockQuantity} units in stock.`
-        )
+      ToastMessages.showWarning(
+        `Sorry, we only have ${stockQuantity} units in stock.`
       );
       return;
     }
@@ -113,42 +106,40 @@ const ProductDetails = ({ productData, message }) => {
     }
   };
 
-  const renderProductImages = () => (
-    <Col className="p-3" md={6} lg={6} sm={12} xs={12}>
-      <img className="big-image" src={previewImg} alt={title} />
-      <Container className="my-3">
-        <Row>
-          {[image_one, image_two, image_three, image_four].map(
-            (img, index) =>
-              img && (
-                <Col
-                  key={index}
-                  className="p-0 m-0"
-                  md={3}
-                  lg={3}
-                  sm={3}
-                  xs={3}
-                >
-                  <img
-                    className="small-image"
-                    src={img}
-                    alt={`${title} ${index + 1}`}
-                    onClick={() => handleThumbnailClick(img)}
-                    style={{ cursor: "pointer" }}
-                  />
-                </Col>
-              )
-          )}
-        </Row>
-      </Container>
-    </Col>
-  );
+  const productImages = productData?.product?.images?.length
+    ? productData.product.images.map((img) => img.url || img.path).filter(Boolean)
+    : [image].filter(Boolean);
+
+  const renderProductImages = () => {
+    const mainImage = previewImg || productImages[0] || "/images/no-image.png";
+
+    return (
+      <Col className="p-3" md={6} lg={6} sm={12} xs={12}>
+        <img className="big-image" src={mainImage} alt={title} />
+        <Container className="my-3">
+          <Row>
+            {productImages.map((img, index) => (
+              <Col key={index} className="p-0 m-0" md={3} lg={3} sm={3} xs={3}>
+                <img
+                  className="small-image"
+                  src={img}
+                  alt={`${title} ${index + 1}`}
+                  onClick={() => handleThumbnailClick(img)}
+                  style={{ cursor: "pointer" }}
+                />
+              </Col>
+            ))}
+          </Row>
+        </Container>
+      </Col>
+    );
+  };
 
   const renderProductInfo = () => (
     <Col className="p-3" md={6} lg={6} sm={12} xs={12}>
       <h5 className="Product-Name">{title}</h5>
       <h6 className="section-sub-title">{short_description}</h6>
-      
+
       <div className="input-group">
         <div className="Product-price-card d-inline">
           Was: ${special_price ? <del>{price}</del> : price}
@@ -162,7 +153,7 @@ const ProductDetails = ({ productData, message }) => {
           Remark: {remark}
         </div>
       </div>
-      
+
       {special_price && (
         <h6 className="text-success mt-2">
           <b>Saving: ${price - special_price}</b>
@@ -262,7 +253,7 @@ const ProductDetails = ({ productData, message }) => {
         </Col>
       )}
 
-      {token && <Review product_id={product_id} />}
+      {token && <Review product_id={actualProductId} />}
     </Row>
   );
 
@@ -271,19 +262,13 @@ const ProductDetails = ({ productData, message }) => {
       <Container fluid={true} className="BetweenTwoSection">
         <div className="breadbody">
           <Breadcrumb>
-            <Breadcrumb.Item>
-              <Link className="text-link" to="/">Home</Link>
+            <Breadcrumb.Item linkAs={Link} linkProps={{ to: '/' }}>
+              Home
             </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Link className="text-link" to={`/${category?.slug}`}>
-                {category?.slug}
-              </Link>
+            <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/${category?.slug}` }}>
+              {category?.slug}
             </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Link className="text-link" to={`/product-details/${product_id}`}>
-                {title}
-              </Link>
-            </Breadcrumb.Item>
+            <Breadcrumb.Item active>{title}</Breadcrumb.Item>
           </Breadcrumb>
         </div>
 
@@ -298,7 +283,7 @@ const ProductDetails = ({ productData, message }) => {
         </Row>
       </Container>
 
-      <SuggestedProduct product_id={product_id} />
+      <SuggestedProduct product_id={actualProductId} />
     </>
   );
 };
