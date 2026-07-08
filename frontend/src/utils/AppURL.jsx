@@ -36,7 +36,9 @@ const AppURL = {
   //cart
   addToCart: `${BaseURL}/cart/add`,
   getCart: `${BaseURL}/cart`,
-  updateCart: `${BaseURL}/cart/update`,
+  updateCart(id) {
+    return `${this.BaseURL}/cart/update/${id}`;
+  },
   removeFromCart(id) {
     return `${this.BaseURL}/cart/remove/${id}`;
   },

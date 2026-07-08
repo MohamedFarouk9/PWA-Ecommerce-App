@@ -2,6 +2,17 @@ import axios from 'axios';
 
 const BASE_URL = 'http://127.0.0.1:8000/api';
 
+const getGuestSessionId = () => {
+  let sessionId = localStorage.getItem('guest_session_id');
+
+  if (!sessionId) {
+    sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem('guest_session_id', sessionId);
+  }
+
+  return sessionId;
+};
+
 const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
@@ -17,6 +28,11 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    if (!config.headers.Authorization) {
+      config.headers['X-Session-ID'] = getGuestSessionId();
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Cart\AddCartItemRequest;
 use App\Http\Requests\Api\Cart\UpdateCartItemRequest;
 use App\Http\Resources\Cart\CartResource;
 use App\Models\Cart;
+use App\Models\Product;
 use App\Services\Cart\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,17 +19,31 @@ class CartController extends Controller
 
     protected function userId(): ?int
     {
-        return auth()->check() ? auth()->id() : null;
+        return auth('api')->check() ? auth('api')->id() : null;
     }
 
-    protected function sessionId(): ?string
+    protected function sessionId(Request $request): ?string
     {
+        $sessionId = $request->header('X-Session-ID')
+            ?: $request->header('X-Session-Id')
+            ?: $request->header('X-SessionId')
+            ?: $request->input('session_id')
+            ?: $request->cookie('laravel_session');
+
+        if ($sessionId) {
+            return $sessionId;
+        }
+
+        if ($request->hasSession()) {
+            return $request->session()->getId();
+        }
+
         return session()->getId();
     }
 
     public function getCartItems(Request $request)
     {
-        $cartItems = $this->cartService->getCartItems($this->userId() , $this->sessionId());
+        $cartItems = $this->cartService->getCartItems($this->userId(), $this->sessionId($request));
         return CartResource::collection($cartItems);
     }
     public function addToCart(AddCartItemRequest $request)
@@ -38,15 +53,15 @@ class CartController extends Controller
         $cartItemData = new CartItemData(
             id: null,
             userId: $this->userId(),
-            sessionId: $this->sessionId(),
+            sessionId: $this->sessionId($request),
             productId: $validated['product_id'],
-            quantity: $validated['quantity'],
+            quantity: $validated['quantity'] ?? 1,
             meta: $validated['meta'] ?? null,
-            price: $validated['price'] ?? 0
+            price: Product::findOrFail($validated['product_id'])->price ?? 0
         );
 
         $cartItem = $this->cartService->addItem($cartItemData);
-        return response()->json($cartItem);
+        return new CartResource($cartItem->load('product'));
     }
 
    public function updateCart(UpdateCartItemRequest $request , $id)
