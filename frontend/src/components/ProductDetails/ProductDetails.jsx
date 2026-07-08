@@ -265,10 +265,16 @@ const ProductDetails = ({ productData, message }) => {
             <Breadcrumb.Item linkAs={Link} linkProps={{ to: '/' }}>
               Home
             </Breadcrumb.Item>
-            <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/${category?.slug}` }}>
-              {category?.slug}
+            {category?.slug ? (
+              <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/${category.slug}` }}>
+                {category.name}
+              </Breadcrumb.Item>
+            ) : (
+              <Breadcrumb.Item>{category?.name || 'Category'}</Breadcrumb.Item>
+            )}
+            <Breadcrumb.Item active linkAs="span">
+              {title}
             </Breadcrumb.Item>
-            <Breadcrumb.Item active>{title}</Breadcrumb.Item>
           </Breadcrumb>
         </div>
 

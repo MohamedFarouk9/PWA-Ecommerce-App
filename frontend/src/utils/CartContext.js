@@ -11,14 +11,6 @@ export const CartProvider = ({ children }) => {
 
     // Fetch cart items from API
     const fetchCart = useCallback(async () => {
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
-            setCart([]);
-            setLoading(false);
-            return;
-        }
-
         try {
             const response = await apiClient.get(AppURL.getCart);
             const cartData = response.data.data || response.data || [];

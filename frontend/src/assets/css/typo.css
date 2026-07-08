@@ -57,3 +57,13 @@
     font-weight: 600;
     border-radius: 10px;
 }
+
+.breadbody .breadcrumb-item.active {
+    background-color: transparent !important;
+    color: #6c757d !important;
+}
+
+.breadbody .breadcrumb-item.active span {
+    color: inherit !important;
+    background-color: transparent !important;
+}

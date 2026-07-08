@@ -38,6 +38,12 @@ Route::post('/password-reset', [AuthController::class, 'passwordReset']);
 //     return response()->json(['user' => auth()->guard('api')->user()]);
 // });
 
+// Guest and authenticated cart routes
+Route::post('/cart/add', [CartController::class, 'addToCart']);
+Route::get('/cart', [CartController::class, 'getCartItems']);
+Route::patch('/cart/update/{id}', [CartController::class, 'updateCart']);
+Route::delete('/cart/remove/{id}', [CartController::class, 'removeFromCart']);
+
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', [AuthController::class, 'userProfile']);
 
@@ -46,12 +52,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::patch('/reviews/{id}', [ReviewController::class, 'update']);
     Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
-
-    //cart
-    Route::post('/cart/add', [CartController::class, 'addToCart']);
-    Route::get('/cart', [CartController::class, 'getCartItems']);
-    Route::patch('/cart/update/{id}', [CartController::class, 'updateCart']);
-    Route::delete('/cart/remove/{id}', [CartController::class, 'removeFromCart']);
 
 });
 
@@ -97,7 +97,6 @@ Route::get('/sliders/{id}', [SliderController::class, 'show']);
 
 //product_details
 Route::get('/product-details/{id}', [ProductController::class, 'getProductDetails']);
-Route::get('/related-product/{product_id}', [ProductController::class, 'getRelatedProducts']);
 
 //notifications
 Route::get('/notifications', [NotificationController::class, 'index']);
