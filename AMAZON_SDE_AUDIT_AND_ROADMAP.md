@@ -272,4 +272,5 @@ When interviewing at Amazon for an L5/L6 SDE role, frame this project around **L
 | **Phase 4: Docker & DevOps** | One-Click Deployment | Fix `docker-compose.yml` paths; add RabbitMQ & Redis containers; build multi-stage Dockerfile with Nginx for frontend; create GitHub Actions CI. |
 | **Phase 5: PWA & Frontend Polish** | Modern UI & PWA | Add Workbox Service Worker for offline capability; fix `AppURL.jsx` environment variable; resolve search route mismatch; fix broken test. |
 | **Phase 6: Testing & Portfolio Polish** | Amazon Hiring Bar | Write PHPUnit test suite for Cart/Payment/Idempotency; clean repo root scratch files; clean UTF-8 encoding in `README.md`. |
+| **Phase 7: High-Load Optimization & Seeding** | Enterprise Scalability | Implement `db:seed-high-load` chunking engine for 10k+ entities; add composite DB indexes; profile API latencies via `benchmark:endpoints`; dynamic wishlist flow. |
 

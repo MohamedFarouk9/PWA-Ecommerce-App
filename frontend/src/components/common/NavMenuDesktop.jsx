@@ -22,6 +22,14 @@ const NavMenuDesktop = () => {
   const {token , logout } = useContext(AuthContext);
   const { cart } = useContext(CartContext) || {};
 
+  const wishlistCount = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("ecommerce_wishlist") || "[]").length;
+    } catch {
+      return 0;
+    }
+  })();
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -90,7 +98,7 @@ const NavMenuDesktop = () => {
                 <Link to="/favourite" className="btn">
                   <i className="fa h4 fa-heart"></i>
                   <sup>
-                    <span className="badge text-white bg-danger"> 3 </span>
+                    <span className="badge text-white bg-danger"> {wishlistCount} </span>
                   </sup>
                 </Link>
 
