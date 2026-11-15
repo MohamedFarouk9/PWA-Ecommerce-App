@@ -38,11 +38,24 @@ class CartRepository implements CartRepositoryInterface
     }
 
     /**
-     * Add item to cart
+     * Add item to cart, incrementing quantity if already present
      */
-
     public function addItem(array $data)
     {
+        $userId = $data['user_id'] ?? null;
+        $sessionId = $data['session_id'] ?? null;
+        $productId = $data['product_id'] ?? null;
+
+        // Merge existing item if present for this user/session
+        $existing = $this->forUserOrSession($userId, $sessionId)
+            ->where('product_id', $productId)
+            ->first();
+
+        if ($existing) {
+            $existing->increment('quantity', $data['quantity'] ?? 1);
+            return $existing->fresh();
+        }
+
         return $this->model->create($data);
     }
 

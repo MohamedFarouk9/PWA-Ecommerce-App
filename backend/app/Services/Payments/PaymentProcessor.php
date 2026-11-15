@@ -53,15 +53,26 @@ class PaymentProcessor implements PaymentProcessorInterface
                     );
                 }
 
-                // Record request state as pending
-                $this->idempotencyHandler->store(
-                    $idempotencyKey,
-                    $paymentRequest->gateway,
-                    $paymentRequest->orderId,
-                    $paymentRequest->customerId,
-                    (array) $paymentRequest,
-                    'pending'
-                );
+                // Record request state as pending with distributed lock concurrency guard
+                try {
+                    $this->idempotencyHandler->store(
+                        $idempotencyKey,
+                        $paymentRequest->gateway,
+                        $paymentRequest->orderId,
+                        $paymentRequest->customerId,
+                        (array) $paymentRequest,
+                        'pending'
+                    );
+                } catch (\Illuminate\Database\QueryException $qe) {
+                    $cached = $this->idempotencyHandler->checkDuplicate($idempotencyKey);
+                    if ($cached) {
+                        return $cached;
+                    }
+                    return PaymentResultDTO::failed(
+                        $paymentRequest->gateway,
+                        'Payment request is already being processed concurrently. Please wait.'
+                    );
+                }
             }
 
             // Step 2: Run Pre-Flight Chain of Responsibility (Validation -> Logging)

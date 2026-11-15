@@ -54,7 +54,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Get specific order details (strictly scoped to owner)
+     * Get specific order details (strictly scoped to owner to prevent IDOR)
      */
     public function show($id)
     {
@@ -81,7 +81,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Checkout and create order from current cart
+     * Checkout and create order from current cart with pessimistic concurrency locking
      */
     public function store(Request $request)
     {
@@ -100,13 +100,13 @@ class OrderController extends Controller
         $sessionId = $this->sessionId($request);
 
         return DB::transaction(function () use ($userId, $sessionId, $validated) {
-            // Fetch cart items
+            // 1. Fetch user's cart items with pessimistic row lock
             $cartItems = Cart::where(function ($q) use ($userId, $sessionId) {
                 $q->where('user_id', $userId);
                 if ($sessionId) {
                     $q->orWhere('session_id', $sessionId);
                 }
-            })->with('product')->lockForUpdate()->get();
+            })->lockForUpdate()->get();
 
             if ($cartItems->isEmpty()) {
                 return response()->json([
@@ -115,18 +115,31 @@ class OrderController extends Controller
                 ], 422);
             }
 
-            // Authoritatively calculate total from fresh product data in DB
+            // 2. Validate current stock and compute prices authoritatively from database
             $totalAmount = 0.00;
             $orderItemsData = [];
 
             foreach ($cartItems as $item) {
-                $product = $item->product;
+                // Pessimistically lock product row to prevent TOCTOU race conditions
+                $product = Product::where('id', $item->product_id)->lockForUpdate()->first();
                 if (!$product) {
-                    continue;
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'A product in your cart is no longer available.',
+                    ], 422);
+                }
+
+                $quantity = max(1, (int) $item->quantity);
+
+                // Inventory check
+                if ($product->quantity < $quantity) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient stock for '{$product->name}'. Only {$product->quantity} available.",
+                    ], 422);
                 }
 
                 $unitPrice = (float) $product->price;
-                $quantity = max(1, (int) $item->quantity);
                 $lineTotal = round($unitPrice * $quantity, 2);
                 $totalAmount += $lineTotal;
 
@@ -140,7 +153,12 @@ class OrderController extends Controller
                 ];
             }
 
-            // Create Order
+            // Sanitize input to prevent Stored XSS
+            $shippingAddress = strip_tags($validated['shipping_address']);
+            $billingAddress = strip_tags($validated['billing_address'] ?? $validated['shipping_address']);
+            $notes = isset($validated['notes']) ? strip_tags($validated['notes']) : null;
+
+            // 3. Create Order
             $order = Order::create([
                 'user_id' => $userId,
                 'order_number' => 'ORD-' . strtoupper(Str::random(10)),
@@ -148,12 +166,12 @@ class OrderController extends Controller
                 'payment_status' => 'unpaid',
                 'total_amount' => $totalAmount,
                 'payment_method' => $validated['payment_method'],
-                'shipping_address' => $validated['shipping_address'],
-                'billing_address' => $validated['billing_address'] ?? $validated['shipping_address'],
-                'notes' => $validated['notes'] ?? null,
+                'shipping_address' => $shippingAddress,
+                'billing_address' => $billingAddress,
+                'notes' => $notes,
             ]);
 
-            // Insert Order Items
+            // 4. Insert Order Items
             foreach ($orderItemsData as &$data) {
                 $data['order_id'] = $order->id;
             }
@@ -174,4 +192,3 @@ class OrderController extends Controller
         });
     }
 }
-

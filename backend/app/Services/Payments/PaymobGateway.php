@@ -37,6 +37,7 @@ class PaymobGateway implements PaymentGatewayInterface
             'status' => 'processed',
             'gateway' => 'paymob',
             'success' => $success,
+            'order_id' => $payload['obj']['order']['merchant_order_id'] ?? ($payload['order_id'] ?? null),
             'transaction_id' => $payload['obj']['id'] ?? ($payload['id'] ?? null),
         ];
     }

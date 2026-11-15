@@ -49,15 +49,22 @@ class CartController extends Controller
     public function addToCart(AddCartItemRequest $request)
     {
         $validated = $request->validated();
+        $product = Product::findOrFail($validated['product_id']);
+
+        if ($product->quantity <= 0) {
+            return response()->json([
+                'message' => 'Product is currently out of stock.'
+            ], 422);
+        }
 
         $cartItemData = new CartItemData(
             id: null,
             userId: $this->userId(),
             sessionId: $this->sessionId($request),
-            productId: $validated['product_id'],
-            quantity: $validated['quantity'] ?? 1,
+            productId: $product->id,
+            quantity: min($product->quantity, $validated['quantity'] ?? 1),
             meta: $validated['meta'] ?? null,
-            price: Product::findOrFail($validated['product_id'])->price ?? 0
+            price: $product->price ?? 0
         );
 
         $cartItem = $this->cartService->addItem($cartItemData);

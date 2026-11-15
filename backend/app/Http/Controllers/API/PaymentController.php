@@ -6,8 +6,10 @@ use App\Events\Notifications\OrderCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -45,9 +47,9 @@ class PaymentController extends Controller
             ], 404);
         }
 
-        // Ownership enforcement
-        $currentUserId = auth('api')->check() ? auth('api')->id() : null;
-        if ($currentUserId && (int) $order->user_id !== (int) $currentUserId) {
+        // Strict ownership enforcement (zero trust: caller must own this order)
+        $currentUserId = auth('api')->id();
+        if (!$currentUserId || (int) $order->user_id !== (int) $currentUserId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized order payment attempt.',
@@ -85,18 +87,35 @@ class PaymentController extends Controller
         $result = $this->paymentService->processPayment($chargeData, $idempotencyKey);
 
         if ($result->success) {
-            $order->update([
-                'payment_status' => 'paid',
-                'status' => 'processing',
-                'payment_method' => $result->gateway,
-            ]);
+            // Atomic settlement transaction: decrement inventory, update order, clear cart
+            DB::transaction(function () use ($order, $result) {
+                $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->first();
+                if ($lockedOrder->payment_status === 'paid') {
+                    return; // Already processed
+                }
 
-            // Clear settled cart
-            Cart::where('user_id', $order->user_id)->delete();
+                // Decrement inventory stock for each ordered product
+                foreach ($lockedOrder->items as $item) {
+                    $product = Product::where('id', $item->product_id)->lockForUpdate()->first();
+                    if ($product) {
+                        $product->decrement('quantity', min($product->quantity, $item->quantity));
+                    }
+                }
+
+                // Transition order to paid
+                $lockedOrder->update([
+                    'payment_status' => 'paid',
+                    'status' => 'processing',
+                    'payment_method' => $result->gateway,
+                ]);
+
+                // Clear settled cart
+                Cart::where('user_id', $lockedOrder->user_id)->delete();
+            });
 
             // Fire event for RabbitMQ async notification workers
             try {
-                event(new OrderCreated($order->load('user')));
+                event(new OrderCreated($order->fresh()->load('user')));
             } catch (\Throwable $e) {
                 \Log::warning('OrderCreated notification event dispatch failed', [
                     'order_id' => $order->id,
@@ -116,8 +135,8 @@ class PaymentController extends Controller
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'total_amount' => $order->total_amount,
-                'payment_status' => $order->payment_status,
-                'status' => $order->status,
+                'payment_status' => $order->fresh()->payment_status,
+                'status' => $order->fresh()->status,
             ],
         ], $result->success ? 200 : 400);
     }
@@ -143,6 +162,39 @@ class PaymentController extends Controller
     {
         $gateway = $request->query('gateway', 'stripe');
         $result = $this->paymentService->handleWebhook($gateway, $request->all());
+
+        // Asynchronous settlement verification from webhook
+        if (!empty($result['success']) && !empty($result['order_id'])) {
+            $order = Order::find($result['order_id']);
+            if ($order && $order->payment_status !== 'paid') {
+                DB::transaction(function () use ($order, $gateway) {
+                    $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->first();
+                    if ($lockedOrder->payment_status !== 'paid') {
+                        foreach ($lockedOrder->items as $item) {
+                            $product = Product::where('id', $item->product_id)->lockForUpdate()->first();
+                            if ($product) {
+                                $product->decrement('quantity', min($product->quantity, $item->quantity));
+                            }
+                        }
+
+                        $lockedOrder->update([
+                            'payment_status' => 'paid',
+                            'status' => 'processing',
+                            'payment_method' => $gateway,
+                        ]);
+
+                        Cart::where('user_id', $lockedOrder->user_id)->delete();
+                    }
+                });
+
+                try {
+                    event(new OrderCreated($order->fresh()->load('user')));
+                } catch (\Throwable $e) {
+                    \Log::warning('Webhook OrderCreated event dispatch failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
         return response()->json($result);
     }
 }

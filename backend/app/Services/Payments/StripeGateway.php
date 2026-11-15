@@ -46,6 +46,7 @@ class StripeGateway implements PaymentGatewayInterface
             'gateway' => 'stripe',
             'event' => $eventType,
             'success' => $isSuccess,
+            'order_id' => $payload['data']['object']['metadata']['order_id'] ?? null,
             'transaction_id' => $payload['data']['object']['id'] ?? null,
         ];
     }
