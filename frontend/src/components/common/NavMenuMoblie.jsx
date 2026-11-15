@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Container from "react-bootstrap/Container";
 import { Link } from "react-router-dom";
 import Row from "react-bootstrap/Row";
@@ -6,9 +6,10 @@ import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 import Logo from "../../assets/images/logo.jpg";
 import MegaMenuMobile from "../home/MegaMenuMobile";
+import { CartContext } from "../../utils/CartContext";
 
 const NavMenuMobile = () => {
-
+  const { cart } = useContext(CartContext) || {};
   const [sideNavState , setSideNavState] = useState("sideNavClose");
   const [contentOverState , setContentOverState] = useState("ContentOverlayClose");
 
@@ -53,9 +54,11 @@ const NavMenuMobile = () => {
                 <img className="nav-logo" src={Logo} alt="logo" />
               </Link>
 
-              <Button className="cart-btn">
-                <i className="fa fa-shopping-cart"></i> 3 Items
-              </Button>
+              <Link to="/cart">
+                <Button className="cart-btn">
+                  <i className="fa fa-shopping-cart"></i> {cart?.length || 0} Items
+                </Button>
+              </Link>
             </Col>
           </Row>
         </Container>

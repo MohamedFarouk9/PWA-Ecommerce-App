@@ -9,6 +9,7 @@ import Logo from "../../assets/images/logo.jpg";
 import MegaMenuDesktop from "../home/MegaMenuDesktop";
 import Bars from "../../assets/images/bars.png";
 import { AuthContext } from "../../utils/AuthContext";
+import { CartContext } from "../../utils/CartContext";
 
 
 const NavMenuDesktop = () => {
@@ -19,6 +20,7 @@ const NavMenuDesktop = () => {
   const [searchKey, setSearchKey] = useState(""); // State for search input
   const navigate = useNavigate(); // Hook for navigation
   const {token , logout } = useContext(AuthContext);
+  const { cart } = useContext(CartContext) || {};
 
   const handleLogout = () => {
     logout();
@@ -103,10 +105,13 @@ const NavMenuDesktop = () => {
            
               {token ? (
                 <>
-                    <button variant="danger" className="h4 btn" onClick={()=> navigate("/profile")}>
+                    <button className="h4 btn" onClick={()=> navigate("/orders")}>
+                      Orders
+                    </button>
+                    <button className="h4 btn" onClick={()=> navigate("/profile")}>
                       Profile
                     </button>
-                    <button variant="danger" className="h4 btn" onClick={handleLogout}>
+                    <button className="h4 btn" onClick={handleLogout}>
                       Logout
                     </button>
                 </>
@@ -124,7 +129,7 @@ const NavMenuDesktop = () => {
 
                 <Link to="/cart">
                   <Button className="cart-btn">
-                    <i className="fa fa-shopping-cart"></i> 3 Items
+                    <i className="fa fa-shopping-cart"></i> {cart?.length || 0} Items
                   </Button>
                 </Link>
               </Col>

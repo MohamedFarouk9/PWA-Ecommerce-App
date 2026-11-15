@@ -193,7 +193,10 @@ const PaymentPage = () => {
                     </div>
                   </div>
                   <Button variant="primary" onClick={() => navigate("/")} className="me-2">
-                    <i className="fa fa-home"></i> Continue Shopping
+                    <i className="fa fa-home me-1"></i> Continue Shopping
+                  </Button>
+                  <Button variant="outline-primary" onClick={() => navigate("/orders")}>
+                    <i className="fa fa-list-alt me-1"></i> View My Orders
                   </Button>
                 </Card.Body>
               </Card>

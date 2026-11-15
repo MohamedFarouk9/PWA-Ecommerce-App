@@ -27,6 +27,9 @@ const Profile = ({userData , logout }) => {
                                 <ListGroup.Item><strong>Bio:</strong> {userData.user.bio}</ListGroup.Item>
                             </ListGroup>
                             <div className="text-center mt-3">
+                                <Button variant="outline-primary" className="m-1" onClick={() => navigate('/orders')}>
+                                    <i className="fa fa-shopping-bag me-1"></i> My Orders
+                                </Button>
                                 <Button variant="primary" className="m-1">Edit Profile</Button>
                                 <Button variant="danger" className="m-1" onClick={handleLogout}>Logout</Button>
                             </div>
