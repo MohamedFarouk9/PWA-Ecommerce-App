@@ -77,18 +77,16 @@ class RabbitMQProducer
      */
     public function publishNotification(string $type, array $data): bool
     {
-        return $this->publish('notificationstopic', "notification.{$type}", [
+        return $this->publish('notifications.topic', "notification.{$type}", [
             'type'    => $type,
             'user_id' => $data['user_id'] ?? null,
             'payload' => $data,
-        ]
-        );
+        ]);
     }
 
     /**
      * Publish email task
      */
-
     public function publishEmail(array $emailData): bool
     {
         return $this->publish(
@@ -101,8 +99,7 @@ class RabbitMQProducer
     /**
      * Bulk publish messages
      */
-
-    public function publishBatch(string $exchange, array $messages): bool
+    public function publishBatch(string $exchange, array $messages): int
     {
         $count = 0;
         foreach ($messages as $routingKey => $data) {

@@ -50,7 +50,7 @@ return [
                 //Dead Letter Exchange (DLX): When messages fail (rejected/expired), they go to DLX for analysis.
                 'x-dead-letter-exchange'    => 'dlx.notifications',              // DLX for failed messages
                 'x-dead-letter-routing-key' => 'notifications.email.deadletter', // Routing for DL
-                'x-message-ttl'             => 60000,                            // Messages expire after 1h (ms)
+                'x-message-ttl'             => 3600000,                          // Messages expire after 1h (ms)
             ],
         ],
         'notifications.sms.queue'      => [
@@ -86,7 +86,7 @@ return [
         // Realtime Queue Bindings
         [
             'queue'        => 'notifications.realtime.queue',
-            'exchange'     => 'notifications.fanout',
+            'exchange'     => 'realtime.fanout',
             'routing_key'  => '#', // Fanout ignores routing keys
         ],
         // Database Queue Bindings

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
@@ -10,23 +11,21 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-
     public function __construct(private ApiProductRepositoryInterface $productRepository)
     {}
 
     /**
-     * Search products by title, brand, or description
+     * Search products by title, brand, or description (RESTful 200 OK on empty)
      */
+    public function search($query)
+    {
+        $results = $this->productRepository->search($query, 20);
+        return ProductResource::collection($results);
+    }
 
     public function ProductBySearh($query)
     {
-        $results = $this->productRepository->search($query, 20);
-
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No products found'], 404);
-        }
-        // return response()->json(['status' => 'success', 'data' => ['products' => $results]]);
-        return ProductResource::collection($results);
+        return $this->search($query);
     }
 
     /**
@@ -35,11 +34,12 @@ class ProductController extends Controller
     public function productsByRemark($remark)
     {
         $results = $this->productRepository->getByRemark($remark, 20);
-
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No products found for this remark'], 404);
-        }
-        return response()->json(['status' => 'success', 'data' => ['products' => $results]]);
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'products' => ProductResource::collection($results),
+            ],
+        ]);
     }
 
     /**
@@ -47,45 +47,42 @@ class ProductController extends Controller
      */
     public function getProductsByCategory($slug)
     {
-        // Find category by slug
         $category = ProductCategory::where('slug', $slug)->first();
 
-        if (! $category) {
+        if (!$category) {
             return response()->json(['message' => 'Category not found'], 404);
         }
 
         $results = $this->productRepository->getByCategory($category->id, 12);
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No published products in this category'], 404);
-        }
         return ProductResource::collection($results);
     }
 
-    // Returns all homepage sections with their products
+    /**
+     * Returns all homepage sections with their products
+     */
     public function homepageSections()
     {
         $result = $this->productRepository->getHomepageSections();
-        if (! $result) {
-            return response()->json(['message' => 'No homepage sections found'], 404);
-        }
-        return response()->json(['status' => 'success', 'data' => ['sections' => $result]]);
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'sections' => $result ?? [],
+            ],
+        ]);
     }
+
     /**
-     * Get all published products (done)
+     * Get all published products
      */
     public function getAllPublished(Request $request)
     {
-        $perPage = $request->get('per_page', 15);
+        $perPage = (int) $request->get('per_page', 15);
         $results = $this->productRepository->getAllPublished($perPage);
-
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No published products found'], 404);
-        }
         return ProductResource::collection($results);
     }
 
     /**
-     * Get single product by ID (done)
+     * Get single product by ID
      */
     public function getProductById($id)
     {
@@ -101,10 +98,6 @@ class ProductController extends Controller
     {
         $results = $this->productRepository->getRelatedProducts($productId, 6);
 
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No related products found'], 404);
-        }
-
         return response()->json([
             'status' => 'success',
             'data' => [
@@ -117,7 +110,7 @@ class ProductController extends Controller
     {
         $product = $this->productRepository->getById($id);
 
-        if (! $product) {
+        if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
@@ -129,49 +122,26 @@ class ProductController extends Controller
         ], 200);
     }
 
-    /*
-      * Get related products based on category
-     */
     public function RelatedProducts($productId)
     {
-        $results = $this->productRepository->getRelatedProducts($productId, 6);
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No related products found'], 404);
-        }
-        return ProductResource::collection($results);
+        return $this->getRelatedProducts($productId);
     }
-
-    /*
-    * Get Lastest Products
-    */
 
     public function LastestProducts()
     {
         $results = $this->productRepository->getLatest(10);
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No latest products found'], 404);
-        }
         return ProductResource::collection($results);
     }
 
     public function productBySectionName($sectionName)
     {
         $results = $this->productRepository->getBySectionName($sectionName, 8);
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No products found for this section'], 404);
-        }
-        // return response()->json(['status' => 'success', 'data' => ['products' => $results]]);
         return ProductResource::collection($results);
     }
 
     public function getBySection($sectionId)
     {
         $results = $this->productRepository->getBySection($sectionId, 8);
-        if ($results->isEmpty()) {
-            return response()->json(['message' => 'No products found for this section'], 404);
-        }
-        // return response()->json(['status' => 'success', 'data' => ['products' => $results]]);
         return ProductResource::collection($results);
     }
-
 }

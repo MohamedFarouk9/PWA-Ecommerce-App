@@ -48,21 +48,21 @@ class AuthController extends Controller {
     }
 
     /**
-     * Send Password Reset Link
+     * Send Password Reset Link (OWASP compliant: uniform response to prevent user enumeration)
      */
     public function sendResetLinkEmail(Request $request) {
         $request->validate(['email' => 'required|email']);
 
         $user = $this->authRepository->findByEmail($request->email);
-        if (!$user) {
-            return response()->json(['message' => 'No user found with that email address.'], 404);
+        if ($user) {
+            $token = Str::random(40);
+            $this->authRepository->storeResetToken($request->email, $token);
+            $this->sendPasswordResetEmail($request->email, $token);
         }
 
-        $token = Str::random(40);
-        $this->authRepository->storeResetToken($request->email, $token);
-        $this->sendPasswordResetEmail($request->email, $token);
-
-        return response()->json(['message' => 'Password reset link has been sent to your email.'], 200);
+        return response()->json([
+            'message' => 'If an account with that email exists, a password reset link has been sent.'
+        ], 200);
     }
 
     private function sendPasswordResetEmail(string $email, string $token): void {

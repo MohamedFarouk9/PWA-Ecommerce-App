@@ -8,8 +8,8 @@ class UpdateCartItemAction
 {
     public function __construct(private CartRepositoryInterface $repo){}
 
-    public function execute(int $id , array $data)
+    public function execute(int $id, array $data, ?int $userId = null, ?string $sessionId = null)
     {
-        return $this->repo->updateItem($id, $data);
+        return $this->repo->updateItem($id, $data, $userId, $sessionId);
     }
 }

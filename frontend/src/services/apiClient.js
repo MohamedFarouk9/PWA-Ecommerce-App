@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://127.0.0.1:8000/api';
+const apiHost = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000';
+const BASE_URL = apiHost.endsWith('/api') ? apiHost : `${apiHost}/api`;
 
 const getGuestSessionId = () => {
   let sessionId = localStorage.getItem('guest_session_id');

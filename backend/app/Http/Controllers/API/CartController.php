@@ -64,10 +64,15 @@ class CartController extends Controller
         return new CartResource($cartItem->load('product'));
     }
 
-   public function updateCart(UpdateCartItemRequest $request , $id)
+   public function updateCart(UpdateCartItemRequest $request, $id)
    {
         $data = $request->validated();
-        $item = $this->cartService->updateItem($id , $data);
+        $item = $this->cartService->updateItem(
+            (int) $id,
+            $data,
+            $this->userId(),
+            $this->sessionId($request)
+        );
 
         return response()->json([
             'message' => 'Cart item updated successfully',
@@ -75,8 +80,13 @@ class CartController extends Controller
         ]);
    }
 
-    public function removeFromCart($id){
-        $this->cartService->removeItem($id);
+    public function removeFromCart(Request $request, $id)
+    {
+        $this->cartService->removeItem(
+            (int) $id,
+            $this->userId(),
+            $this->sessionId($request)
+        );
         return response()->json(['message' => 'Item removed successfully']);
     }
 

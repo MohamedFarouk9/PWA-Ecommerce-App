@@ -9,10 +9,10 @@ abstract class PaymentHandler
 {
     protected ?PaymentHandler $next = null;
 
-    public function setNext(PaymentHandler $handler): self
+    public function setNext(PaymentHandler $handler): PaymentHandler
     {
         $this->next = $handler;
-        return $this;
+        return $handler;
     }
 
     abstract public function canHandle(PaymentRequestDTO $request): bool;
@@ -20,6 +20,9 @@ abstract class PaymentHandler
 
     protected function passToNext(PaymentRequestDTO $request): ?PaymentResultDTO
     {
-        return $this->next?->handle($request);
+        if ($this->next && $this->next->canHandle($request)) {
+            return $this->next->handle($request);
+        }
+        return null;
     }
 }

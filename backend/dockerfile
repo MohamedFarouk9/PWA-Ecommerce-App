@@ -9,13 +9,20 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     zip \
-    unzip
+    unzip \
+    libzip-dev
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# Install PHP extensions required for Laravel & RabbitMQ AMQP sockets
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd sockets zip
+
+# Enable Apache mod_rewrite for Laravel routing
+RUN a2enmod rewrite
+
+# Configure Apache DocumentRoot to point strictly to /var/www/html/public
+RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -23,17 +30,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel files
+# Copy application files
 COPY . .
 
-# Install dependencies
-RUN composer install --optimize-autoloader --no-dev
+# Install PHP dependencies
+RUN composer install --optimize-autoloader --no-dev --no-interaction
 
-# Set permissions
+# Set correct permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Expose port 80
 EXPOSE 80
 
-# Start Apache
+# Start Apache in foreground
 CMD ["apache2-foreground"]

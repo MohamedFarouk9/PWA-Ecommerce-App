@@ -33,16 +33,16 @@ class CartService
         return $this->addAcation->execute($data);
     }
 
-    public function updateItem(int $id , array $payload)
+    public function updateItem(int $id, array $payload, ?int $userId = null, ?string $sessionId = null)
     {
-        return DB::transaction(function () use ($id , $payload) {
-            return $this->updateAction->execute($id , $payload);
+        return DB::transaction(function () use ($id, $payload, $userId, $sessionId) {
+            return $this->updateAction->execute($id, $payload, $userId, $sessionId);
         });
     }
 
-    public function removeItem(int $id): bool
+    public function removeItem(int $id, ?int $userId = null, ?string $sessionId = null): bool
     {
-        return $this->removeAction->execute($id);
+        return $this->removeAction->execute($id, $userId, $sessionId);
     }
 
        public function clearCart(?int $userId, ?string $sessionId): int

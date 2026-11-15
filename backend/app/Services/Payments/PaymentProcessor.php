@@ -6,48 +6,54 @@ use App\Contracts\PaymentProcessorInterface;
 use App\DTOs\PaymentRequestDTO;
 use App\DTOs\PaymentResultDTO;
 use App\Services\Payments\Handlers\LoggingHandler;
-use App\Services\Payments\Handlers\RetryHandler;
+use App\Services\Payments\Handlers\PaymentHandler;
 use App\Services\Payments\Handlers\ValidationHandler;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
 class PaymentProcessor implements PaymentProcessorInterface
 {
-    private array $handlers = [];
+    private PaymentHandler $chain;
     private ?IdempotencyHandler $idempotencyHandler = null;
 
     public function __construct(
         private PaymentGatewayFactory $factory,
         ?IdempotencyHandler $idempotencyHandler = null,
     ) {
-        $this->idempotencyHandler = $idempotencyHandler;
-        // Chain of handlers (order matters)
-        $this->handlers = [
-            new ValidationHandler(),
-            new RetryHandler($factory, 3),
-            new LoggingHandler(),
-        ];
+        $this->idempotencyHandler = $idempotencyHandler ?? new IdempotencyHandler();
+
+        // Linked Chain of Responsibility
+        $this->chain = new ValidationHandler();
+        $this->chain->setNext(new LoggingHandler());
     }
 
     public function process(
         PaymentRequestDTO $paymentRequest,
-        ?string $idempotencyKey = null // NEW parameter
+        ?string $idempotencyKey = null
     ): PaymentResultDTO {
         try {
-            // Step 1: Check for duplicate request (NEW)
+            // Step 1: Check Idempotency Cache
             if ($idempotencyKey) {
                 $cachedResult = $this->idempotencyHandler->checkDuplicate($idempotencyKey);
 
                 if ($cachedResult) {
-                    Log::info('Idempotent request - returning cached result', [
+                    Log::info('Idempotent request detected - returning cached result', [
                         'order_id' => $paymentRequest->orderId,
                         'idempotency_key' => $idempotencyKey,
                     ]);
 
-                    return $cachedResult; // Return immediately!
+                    return $cachedResult;
                 }
 
-                // Store as pending (NEW)
+                // Verify payload integrity if prior record exists
+                if (!$this->idempotencyHandler->validateRequestIntegrity($idempotencyKey, (array) $paymentRequest)) {
+                    return PaymentResultDTO::failed(
+                        $paymentRequest->gateway,
+                        'Idempotency violation: request parameters altered under existing key.'
+                    );
+                }
+
+                // Record request state as pending
                 $this->idempotencyHandler->store(
                     $idempotencyKey,
                     $paymentRequest->gateway,
@@ -58,25 +64,19 @@ class PaymentProcessor implements PaymentProcessorInterface
                 );
             }
 
-            // Step 2: Execute handler chain
-            foreach ($this->handlers as $handler) {
-                if (!$handler->canHandle($paymentRequest)) {
-                    continue;
+            // Step 2: Run Pre-Flight Chain of Responsibility (Validation -> Logging)
+            $preFlightResult = $this->chain->handle($paymentRequest);
+            if ($preFlightResult && !$preFlightResult->success) {
+                if ($idempotencyKey) {
+                    $this->idempotencyHandler->markCompleted($idempotencyKey, $preFlightResult);
                 }
-                $result = $handler->handle($paymentRequest);
-                if ($result) {
-                    // Mark as failed in idempotency table (NEW)
-                    if ($idempotencyKey) {
-                        $this->idempotencyHandler->markCompleted($idempotencyKey, $result);
-                    }
-                    return $result;
-                }
+                return $preFlightResult;
             }
 
-            // Step 3: Execute actual payment
-            $result = $this->executePayment($paymentRequest);
+            // Step 3: Execute Payment with Resilient Retry Policy
+            $result = $this->executePaymentWithRetry($paymentRequest);
 
-            // Step 4: Mark as completed in idempotency table (NEW)
+            // Step 4: Record Completion in Idempotency Store
             if ($idempotencyKey) {
                 $this->idempotencyHandler->markCompleted($idempotencyKey, $result);
             }
@@ -84,7 +84,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             return $result;
 
         } catch (Exception $e) {
-            Log::error('Payment processing error', [
+            Log::error('Unhandled error during payment execution', [
                 'order_id' => $paymentRequest->orderId,
                 'gateway' => $paymentRequest->gateway,
                 'error' => $e->getMessage(),
@@ -93,10 +93,9 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             $result = PaymentResultDTO::failed(
                 $paymentRequest->gateway,
-                $e->getMessage()
+                'Payment execution encountered an unexpected error: ' . $e->getMessage()
             );
 
-            // Mark as failed (NEW)
             if ($idempotencyKey) {
                 $this->idempotencyHandler->markCompleted($idempotencyKey, $result);
             }
@@ -105,29 +104,59 @@ class PaymentProcessor implements PaymentProcessorInterface
         }
     }
 
-    private function executePayment(PaymentRequestDTO $paymentRequest): PaymentResultDTO
+    /**
+     * Executes charge against configured gateway with exponential backoff and jitter.
+     */
+    private function executePaymentWithRetry(PaymentRequestDTO $paymentRequest): PaymentResultDTO
     {
-        $gateway = $this->factory->create($paymentRequest->gateway);
+        $maxAttempts = max(1, min(3, (int) ($paymentRequest->retries ?? 1)));
+        $lastError = 'Payment failed';
 
-        $result = $gateway->charge([
-            'amount' => $paymentRequest->amount,
-            'currency' => $paymentRequest->currency,
-            'order_id' => $paymentRequest->orderId,
-            'customer_id' => $paymentRequest->customerId,
-            'metadata' => $paymentRequest->metadata,
-        ]);
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                $gateway = $this->factory->create($paymentRequest->gateway);
 
-        if ($result['success'] ?? false) {
-            return PaymentResultDTO::success(
-                $result['transaction_id'],
-                $paymentRequest->gateway,
-                $result
-            );
+                $chargePayload = [
+                    'amount' => $paymentRequest->amount,
+                    'currency' => $paymentRequest->currency,
+                    'order_id' => $paymentRequest->orderId,
+                    'customer_id' => $paymentRequest->customerId,
+                    'metadata' => $paymentRequest->metadata ?? [],
+                ];
+
+                $response = $gateway->charge($chargePayload);
+
+                if ($response['success'] ?? false) {
+                    return PaymentResultDTO::success(
+                        $response['transaction_id'] ?? '',
+                        $paymentRequest->gateway,
+                        $response
+                    );
+                }
+
+                $lastError = $response['error'] ?? 'Gateway rejected payment.';
+
+            } catch (Exception $e) {
+                $lastError = $e->getMessage();
+                Log::warning("Payment attempt {$attempt}/{$maxAttempts} failed", [
+                    'order_id' => $paymentRequest->orderId,
+                    'gateway' => $paymentRequest->gateway,
+                    'error' => $e->getMessage(),
+                ]);
+
+                if ($attempt === $maxAttempts) {
+                    break;
+                }
+
+                // Exponential backoff with jitter
+                $sleepMs = (int) ((2 ** ($attempt - 1)) * 200 + random_int(20, 100));
+                usleep($sleepMs * 1000);
+            }
         }
 
         return PaymentResultDTO::failed(
             $paymentRequest->gateway,
-            $result['error'] ?? 'Payment failed'
+            "Payment failed after {$maxAttempts} attempt(s): {$lastError}"
         );
     }
 }

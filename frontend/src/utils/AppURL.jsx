@@ -1,10 +1,11 @@
-const BaseURL = "http://127.0.0.1:8000/api";
+const apiHost = process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000";
+const BaseURL = apiHost.endsWith('/api') ? apiHost : `${apiHost}/api`;
 
 const AppURL = {
   BaseURL: BaseURL,
   PostContact: `${BaseURL}/post-contact`,
   Content: `${BaseURL}/content`,
-  //content route
+  
   getContent(type) {
     return `${this.BaseURL}/content/${type}`;
   },
@@ -12,6 +13,7 @@ const AppURL = {
   updateContent(type) {
     return `${this.BaseURL}/content/${type}`;
   },
+
   // Settings routes
   getSettings: `${BaseURL}/settings`,
   updateSettings: `${BaseURL}/settings`,
@@ -33,7 +35,8 @@ const AppURL = {
   UserRegister: `${BaseURL}/register`,
   ForgetPassword: `${BaseURL}/forget-password`,
   PasswordReset: `${BaseURL}/password-reset`,
-  //cart
+
+  // Cart
   addToCart: `${BaseURL}/cart/add`,
   getCart: `${BaseURL}/cart`,
   updateCart(id) {
@@ -43,6 +46,15 @@ const AppURL = {
     return `${this.BaseURL}/cart/remove/${id}`;
   },
 
+  // Orders & Payment
+  Orders: `${BaseURL}/orders`,
+  OrderDetails(id) {
+    return `${this.BaseURL}/orders/${id}`;
+  },
+  PaymentCharge: `${BaseURL}/payment/charge`,
+  PaymentWebhook: `${BaseURL}/payment/webhook`,
+
+  // Products
   productByRemark(remark) {
     return `${this.BaseURL}/products/remark/${remark}`;
   },
@@ -60,7 +72,7 @@ const AppURL = {
   },
 
   ProductBySearch(query) {
-    return `${this.BaseURL}/search/${query}`;
+    return `${this.BaseURL}/products/search/${query}`;
   },
 
   relatedProduct(product_id) {

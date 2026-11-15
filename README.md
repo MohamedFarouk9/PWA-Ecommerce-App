@@ -7,15 +7,15 @@ This is a **Progressive Web App (PWA)** for an eCommerce platform built with **R
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Frontend (React PWA)                          │
-│  • Redux State Management                                        │
-│  • Real-time Notifications via WebSockets                        │
-│  • Offline Support with Service Workers                          │
-│  • Responsive & Mobile-First UI                                  │
+│  • React Query & Context API State Management                    │
+│  • Offline Caching & Background Sync via Service Worker         │
+│  • Multi-Gateway Checkout (Stripe, Paymob, MyFatoorah)          │
+│  • Responsive & Mobile-First Layout                              │
 └────────────────┬────────────────────────────────────────────────┘
                  │
-                 ↓ RESTful API (Passport)
+                 ↓ RESTful API (OAuth2 / Passport)
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Backend (Laravel 11)                          │
+│                    Backend (Laravel 10 / PHP 8.1+)              │
 │                                                                   │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │ API Controllers & Routes                                 │   │
@@ -297,39 +297,23 @@ PWA-Ecommerce-App/
 │   │   │
 │   │   ├── pages/
 │   │   │   ├── HomePage.js
-│   │   │   ├── ProductPage.js
-│   │   │   ├── CheckoutPage.js
-│   │   │   └── DashboardPage.js
-│   │   │
-│   │   ├── redux/
-│   │   │   ├── slices/
-│   │   │   │   ├── orderSlice.js
-│   │   │   │   ├── cartSlice.js
-│   │   │   │   └── notificationSlice.js
-│   │   │   └── store.js
-│   │   │
-│   │   ├── services/
-│   │   │   ├── api.js           # API client
-│   │   │   ├── websocket.js     # WebSocket for real-time
-│   │   │   └── auth.js          # Authentication
-│   │   │
-│   │   ├── hooks/
-│   │   │   ├── useNotifications.js
-│   │   │   ├── useOrders.js
-│   │   │   └── useAuth.js
-│   │   │
-│   │   ├── utils/
-│   │   │   ├── formatters.js
-│   │   │   └── validators.js
-│   │   │
+│   ├── src/
+│   │   ├── components/       # Reusable UI & domain components (Cart, Auth, Products)
+│   │   ├── hooks/            # Custom hooks (useProducts, useCategories)
+│   │   ├── layouts/          # Responsive layouts
+│   │   ├── pages/            # Page-level route views (HomePage, PaymentPage)
+│   │   ├── routes/           # AppRoutes and ProtectedRoute guards
+│   │   ├── services/         # Axios API clients & service layers
+│   │   ├── utils/            # AuthContext, CartContext, AppURL config
+│   │   ├── serviceWorkerRegistration.js # PWA service worker lifecycle
 │   │   └── App.js
 │   │
 │   └── public/
-│       ├── manifest.json         # PWA manifest
-│       └── service-worker.js     # Service worker
+│       ├── manifest.json         # PWA web app manifest
+│       └── service-worker.js     # Progressive Web App offline caching
 │
-├── docker-compose.yml            # Docker configuration
-├── NOTIFICATION_FLOW_DOCUMENTATION.md  # Detailed notification system docs
+├── docker-compose.yml            # Multi-container orchestration (MySQL, RabbitMQ, Redis, Meilisearch)
+├── docs/                         # Internal documentation & architecture guides
 └── README.md
 ```
 
@@ -340,19 +324,23 @@ PWA-Ecommerce-App/
 ### **Frontend**
 | Technology | Purpose |
 |-----------|---------|
-| **React 18** | UI framework |
-| **Redux Toolkit** | State management |
-| **React Router v6** | Client-side routing |
-| **Axios** | HTTP requests |
-| **Socket.io** | Real-time WebSocket communication |
-| **Tailwind CSS** | Utility-first styling |
-| **Vite** | Fast build tool |
+| **React 18** | Core UI library & Virtual DOM |
+| **TanStack React Query** | Asynchronous server-state management & caching |
+| **Context API** | Global auth & cart client-state management |
+| **React Router v6** | Declarative client-side routing & route guards |
+| **Axios** | Interceptor-driven HTTP client with session injection |
+| **Service Worker / PWA** | Offline app shell caching & asset prefetching |
+| **Bootstrap 5 & Framer Motion** | Responsive UI components & fluid animations |
 
 ### **Backend**
 | Technology | Purpose |
 |-----------|---------|
-| **Laravel 11** | PHP web framework |
-| **MySQL 8** | Relational database |
+| **Laravel 10 (PHP 8.1+)** | RESTful API framework & Dependency Injection |
+| **Laravel Passport** | OAuth2 token authentication & API security |
+| **RabbitMQ 3** | Asynchronous AMQP message broker & DLQ architecture |
+| **MySQL 8.0** | Relational data store with ACID transactions |
+| **Redis** | High-performance cache & session store |
+| **Meilisearch** | Fast, typo-tolerant full-text search engine |
 | **Redis** | Caching & sessions |
 | **Laravel Passport** | OAuth2 API authentication |
 | **RabbitMQ 3.12** | Message queue broker |

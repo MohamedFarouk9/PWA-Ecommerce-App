@@ -48,6 +48,14 @@ class Order extends Model
     }
 
     /**
+     * Get the order items.
+     */
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    /**
      * Get the products in this order.
      */
     public function products()

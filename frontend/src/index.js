@@ -8,6 +8,8 @@ import reportWebVitals from './reportWebVitals';
 import { AuthProvider } from './utils/AuthContext';
 import { CartProvider } from "./utils/CartContext";  // Import CartProvider
 
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
@@ -18,6 +20,9 @@ root.render(
     </AuthProvider>
   </React.StrictMode>
 );
+
+// Register service worker for Progressive Web App (PWA) offline capability
+serviceWorkerRegistration.register();
 
 
 // If you want to start measuring performance in your app, pass a function

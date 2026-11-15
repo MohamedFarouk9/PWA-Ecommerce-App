@@ -10,13 +10,14 @@ use Illuminate\Support\Facades\Hash;
 class IdempotencyHandler
 {
     /**
-     * Generate idempotency key from data
+     * Generate deterministic idempotency key from order and customer data
      */
     public static function generate(array $data): string
     {
-        // use order_id + gatway + timestamp to create unique key
-        $key = "{$data['order_id']}-{$data['gateway']}-" . now()->timestamp;
-        return hash('sha256', $key);
+        $orderId = $data['order_id'] ?? '';
+        $customerId = $data['customer_id'] ?? '';
+        $gateway = $data['gateway'] ?? '';
+        return hash('sha256', "order:{$orderId}:customer:{$customerId}:gw:{$gateway}");
     }
 
     /**
@@ -34,8 +35,8 @@ class IdempotencyHandler
         // Found a previous request
         if ($record->status === 'completed') {
             return PaymentResultDTO::success(
-                $record->transaction_id,
-                $record->gatway,
+                $record->transaction_id ?? '',
+                $record->gateway,
                 $record->response ?? []
             );
         }
@@ -106,36 +107,32 @@ class IdempotencyHandler
     }
 
     /**
-     * Hash request data for integrity check
+     * Hash request data for integrity check (deterministic sha256)
      */
     private function hashRequest(array $data): string
     {
         $normalized = [
-            'amount' => $data['amount'] ?? 0,
-            'currency' => $data['currency'] ?? 'USD',
-            'order_id' => $data['order_id'] ?? '',
-            'customer_id' => $data['customer_id'] ?? '',
+            'amount' => (string) ($data['amount'] ?? 0),
+            'currency' => strtoupper((string) ($data['currency'] ?? 'USD')),
+            'order_id' => (string) ($data['order_id'] ?? ''),
+            'customer_id' => (string) ($data['customer_id'] ?? ''),
         ];
 
-        return Hash::make(json_encode($normalized));
+        return hash('sha256', json_encode($normalized));
     }
 
     /**
      * Validate request hasn't been tampered with
      */
-
     public function validateRequestIntegrity(string $idempotencyKey, array $requestData): bool
     {
         $record = IdempotentTransaction::byKey($idempotencyKey)->first();
 
-        if (!$record) {
-            // No record found - treat as new request
+        if (!$record || empty($record->request_hash)) {
             return true;
         }
 
-        $newHash = $this->hashRequest($requestData);
-
-        // Compare - if different, request was modified (suspicious!)
-        return Hash::check(json_encode($requestData), $record->request_hash);
+        $incomingHash = $this->hashRequest($requestData);
+        return hash_equals($record->request_hash, $incomingHash);
     }
 }

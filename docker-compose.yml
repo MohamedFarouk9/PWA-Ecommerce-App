@@ -1,71 +1,117 @@
 version: '3.8'
 
 services:
-  # Meilisearch Service
-  meilisearch:
-    image: getmeili/meilisearch
-    container_name: meilisearch
-    ports:
-      - "7700:7700"
-    environment:
-      MEILI_MASTER_KEY: masterKey
-    volumes:
-      - meilisearch_data:/data.ms
-
-  # MySQL Service
+  # MySQL Database Service
   mysql:
     image: mysql:8.0
-    container_name: mysql
+    container_name: ecommerce_mysql
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: laravel
       MYSQL_USER: laravel
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_PASSWORD: secret_password
+      MYSQL_ROOT_PASSWORD: root_secret_password
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Laravel Service
-  laravel:
+  # RabbitMQ Message Broker Service
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ecommerce_rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP protocol
+      - "15672:15672" # RabbitMQ Management Dashboard
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # Redis Cache & Session Store
+  redis:
+    image: redis:alpine
+    container_name: ecommerce_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Meilisearch Full-Text Search Engine
+  meilisearch:
+    image: getmeili/meilisearch:v1.5
+    container_name: ecommerce_meilisearch
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: masterKey123
+    volumes:
+      - meilisearch_data:/data.ms
+
+  # Laravel Backend API Service
+  backend:
     build:
-      context: ./laravel-app
-      dockerfile: Dockerfile
-    container_name: laravel
+      context: ./backend
+      dockerfile: dockerfile
+    container_name: ecommerce_backend
     restart: unless-stopped
     ports:
       - "8000:80"
     volumes:
-      - ./laravel-app:/var/www/html
+      - ./backend:/var/www/html
     environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
       DB_HOST: mysql
+      DB_PORT: 3306
       DB_DATABASE: laravel
       DB_USERNAME: laravel
-      DB_PASSWORD: secret
+      DB_PASSWORD: secret_password
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
       MEILISEARCH_HOST: http://meilisearch:7700
-      MEILISEARCH_KEY: masterKey
+      MEILISEARCH_KEY: masterKey123
     depends_on:
-      - mysql
-      - meilisearch
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      meilisearch:
+        condition: service_started
 
-  # React Service
-  react:
+  # React PWA Frontend Service
+  frontend:
     build:
-      context: ./react-app
+      context: ./frontend
       dockerfile: Dockerfile
-    container_name: react
+    container_name: ecommerce_frontend
     restart: unless-stopped
     ports:
       - "3000:3000"
-    volumes:
-      - ./react-app:/app
     environment:
       REACT_APP_API_BASE_URL: http://localhost:8000
     depends_on:
-      - laravel
+      - backend
 
-# Volumes
+# Persistent Named Volumes
 volumes:
   mysql_data:
+  rabbitmq_data:
+  redis_data:
   meilisearch_data:

@@ -22,19 +22,23 @@ class PermissionServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // If the permission tables don't exist yet, skip boot logic to avoid SQL errors during first deploy
-        $tables = config('permission.table_names');
-        $requiredTables = [
-            $tables['permissions'] ?? null,
-            $tables['roles'] ?? null,
-            $tables['model_has_permissions'] ?? null,
-            $tables['model_has_roles'] ?? null,
-            $tables['role_has_permissions'] ?? null,
-        ];
-        foreach ($requiredTables as $tbl) {
-            if (! $tbl || ! Schema::hasTable($tbl)) {
-                return;
+        // If the permission tables don't exist yet or DB is offline, skip boot logic to avoid SQL errors
+        try {
+            $tables = config('permission.table_names');
+            $requiredTables = [
+                $tables['permissions'] ?? null,
+                $tables['roles'] ?? null,
+                $tables['model_has_permissions'] ?? null,
+                $tables['model_has_roles'] ?? null,
+                $tables['role_has_permissions'] ?? null,
+            ];
+            foreach ($requiredTables as $tbl) {
+                if (! $tbl || ! Schema::hasTable($tbl)) {
+                    return;
+                }
             }
+        } catch (\Throwable $e) {
+            return;
         }
 
         // Reset cached roles and permissions

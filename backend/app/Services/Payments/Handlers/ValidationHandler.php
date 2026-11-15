@@ -9,36 +9,32 @@ class ValidationHandler extends PaymentHandler
 {
     public function canHandle(PaymentRequestDTO $request): bool
     {
-        return true; // Always validate
+        return true;
     }
 
     public function handle(PaymentRequestDTO $request): ?PaymentResultDTO
     {
-        // Validate amount
         if ($request->amount <= 0) {
             return PaymentResultDTO::failed(
                 $request->gateway,
-                'Invalid amount. Must be greater than 0.'
+                'Invalid payment amount. Amount must be greater than zero.'
             );
         }
 
-        // Validate gateway
         if (empty($request->gateway)) {
             return PaymentResultDTO::failed(
                 'unknown',
-                'Gateway not specified.'
+                'Payment gateway is not specified.'
             );
         }
 
-        // Validate customer
         if (empty($request->customerId)) {
             return PaymentResultDTO::failed(
                 $request->gateway,
-                'Customer ID is required.'
+                'Customer identification is required.'
             );
         }
 
-        // All valid, pass to next handler
         return $this->passToNext($request);
     }
 }

@@ -8,9 +8,9 @@ class RemoveCartItemAction
 {
     public function __construct(private CartRepositoryInterface $repo){}
 
-    public function execute(int $id)
+    public function execute(int $id, ?int $userId = null, ?string $sessionId = null)
     {
-        return $this->repo->removeItem($id);
+        return $this->repo->removeItem($id, $userId, $sessionId);
     }
 
 }
