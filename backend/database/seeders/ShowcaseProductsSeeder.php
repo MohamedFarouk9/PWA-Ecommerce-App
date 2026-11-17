@@ -39,7 +39,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-APPLE-MBP16-M3MAX-SB',
                 'color' => ['Space Black', 'Silver'],
                 'size' => ['16-inch'],
-                'category' => 'Computers & Accessories',
+                'category' => 'Laptops',
                 'status' => 'published',
                 'sections' => ['featured', 'best_seller'],
                 'images' => 4,
@@ -68,7 +68,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-SAMSUNG-S24U-5G-TG',
                 'color' => ['Titanium Gray', 'Titanium Black', 'Titanium Violet', 'Titanium Yellow'],
                 'size' => ['256GB', '512GB', '1TB'],
-                'category' => 'Smartphones & Tablets',
+                'category' => 'Smartphones',
                 'status' => 'published',
                 'sections' => ['featured', 'new_arrival'],
                 'images' => 4,
@@ -96,7 +96,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-SONY-WH1000XM5-MB',
                 'color' => ['Midnight Blue', 'Black', 'Silver'],
                 'size' => ['One Size'],
-                'category' => 'Audio & Headphones',
+                'category' => 'Audio',
                 'status' => 'published',
                 'sections' => ['best_seller'],
                 'images' => 3,
@@ -123,7 +123,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-NIKE-AFN3-BC',
                 'color' => ['Bright Crimson', 'White/Black', 'Volt/Black'],
                 'size' => ['US 7', 'US 7.5', 'US 8', 'US 8.5', 'US 9', 'US 9.5', 'US 10', 'US 10.5', 'US 11', 'US 12'],
-                'category' => 'Health & Fitness',
+                'category' => 'Fitness',
                 'status' => 'published',
                 'sections' => ['featured', 'new_arrival'],
                 'images' => 4,
@@ -149,7 +149,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-DELL-XPS15-9530-PS',
                 'color' => ['Platinum Silver'],
                 'size' => ['15.6-inch'],
-                'category' => 'Computers & Accessories',
+                'category' => 'Laptops',
                 'status' => 'published',
                 'sections' => ['best_seller'],
                 'images' => 3,
@@ -177,7 +177,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-BOSE-QCUE-MB',
                 'color' => ['Moonstone Blue', 'Black', 'White Smoke'],
                 'size' => ['One Size'],
-                'category' => 'Audio & Headphones',
+                'category' => 'Audio',
                 'status' => 'published',
                 'sections' => ['featured'],
                 'images' => 3,
@@ -204,7 +204,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-LOGITECH-MXM3S-GR',
                 'color' => ['Graphite', 'Pale Grey'],
                 'size' => ['One Size'],
-                'category' => 'Computers & Accessories',
+                'category' => 'Laptops',
                 'status' => 'published',
                 'sections' => ['best_seller'],
                 'images' => 3,
@@ -231,7 +231,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-ASUS-PG27AQDM',
                 'color' => ['Black'],
                 'size' => ['27-inch'],
-                'category' => 'Computers & Accessories',
+                'category' => 'Laptops',
                 'status' => 'published',
                 'sections' => ['new_arrival'],
                 'images' => 3,
@@ -259,7 +259,7 @@ class ShowcaseProductsSeeder extends Seeder
                 'sku' => 'SKU-APPLE-AW9-45-MA',
                 'color' => ['Midnight', 'Starlight', 'Silver', 'Pink', 'Red'],
                 'size' => ['41mm', '45mm'],
-                'category' => 'Smartphones & Tablets',
+                'category' => 'Smartphones',
                 'status' => 'published',
                 'sections' => ['featured', 'best_seller'],
                 'images' => 4,
@@ -340,7 +340,7 @@ class ShowcaseProductsSeeder extends Seeder
 
             // Assign to sections
             foreach ($productData['sections'] as $sectionSlug) {
-                $section = Section::where('slug', $sectionSlug)->first();
+                $section = Section::where('name', $sectionSlug)->first();
                 if ($section) {
                     $product->sections()->syncWithoutDetaching([$section->id]);
                 }
@@ -353,17 +353,14 @@ class ShowcaseProductsSeeder extends Seeder
             foreach ($productData['specifications'] as $index => $spec) {
                 $attribute = ProductAttribute::firstOrCreate(['name' => $spec['attribute']]);
 
-                ProductSpecification::updateOrCreate(
-                    [
-                        'product_id' => $product->id,
-                        'product_attribute_id' => $attribute->id,
-                    ],
-                    [
+                // Use the pivot table through the relationship
+                $product->specifications()->syncWithoutDetaching([
+                    $attribute->id => [
                         'value' => $spec['value'],
                         'unit' => $spec['unit'],
                         'position' => $index + 1,
                     ]
-                );
+                ]);
             }
         }
 
@@ -381,10 +378,10 @@ class ShowcaseProductsSeeder extends Seeder
         }
 
         // Sections
-        foreach (['featured', 'new_arrival', 'best_seller'] as $slug) {
+        foreach (['featured', 'new_arrival', 'best_seller'] as $name) {
             Section::firstOrCreate(
-                ['slug' => $slug],
-                ['name' => ucwords(str_replace('_', ' ', $slug))]
+                ['name' => $name],
+                ['name' => ucwords(str_replace('_', ' ', $name))]
             );
         }
 
@@ -442,7 +439,7 @@ class ShowcaseProductsSeeder extends Seeder
                         'is_cover' => $i === 0,
                     ]);
 
-                    $this->command->info("  Downloaded image {$i + 1} for {$product->name}");
+                    $this->command->info("  Downloaded image " . ($i + 1) . " for " . $product->name);
                 } else {
                     // Create placeholder
                     $this->createPlaceholder($filename, $product->name);

@@ -535,3 +535,209 @@
         border-bottom: 3px solid #1a73e8;
     }
 }
+
+/* ===== IMAGE MANAGER MODAL STYLES ===== */
+.image-manager {
+    padding: 16px;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.image-item {
+    position: relative;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.image-item.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: #1a73e8;
+}
+
+.image-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-color: #ccc;
+}
+
+.image-thumbnail {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+}
+
+.image-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s;
+}
+
+.image-item:hover .image-thumbnail img {
+    transform: scale(1.05);
+}
+
+.cover-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: #1a73e8;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    z-index: 2;
+}
+
+.position-indicator {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.image-actions {
+    display: flex;
+    gap: 4px;
+    padding: 8px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+    justify-content: center;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background: white;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+    color: #333;
+}
+
+.btn-action.active {
+    background: #e8f5e9;
+    border-color: #4caf50;
+    color: #2e7d32;
+}
+
+.btn-action.danger:hover {
+    background: #ffebee;
+    border-color: #ef5350;
+    color: #c62828;
+}
+
+.drag-handle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 3;
+}
+
+.image-item:hover .drag-handle {
+    opacity: 1;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.upload-area:hover,
+.upload-area.drag-over {
+    border-color: #1a73e8;
+    background: #f5f8ff;
+}
+
+.upload-area i {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.upload-area h5 {
+    margin: 16px 0 8px;
+    color: #333;
+}
+
+.upload-area p {
+    margin: 0;
+    color: #999;
+}
+
+/* Toast container positioning */
+#toastContainer {
+    z-index: 1050;
+}
+
+/* Admin product edit page image preview */
+#imagePreviewGrid .position-relative {
+    position: relative;
+}
+
+#imagePreviewGrid .cover-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+}
+
+/* Modal improvements */
+.modal-xl {
+    max-width: 1140px;
+}
+
+.modal-dialog-scrollable .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Progress bar */
+.progress {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    border-radius: 4px;
+}

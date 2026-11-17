@@ -84,6 +84,31 @@ const AppURL = {
   },
 
   HomepageSections: `${BaseURL}/products/homepage-sections`,
+
+  // Admin Product Images
+  adminProductImages(productId) {
+    return `${this.BaseURL}/admin/products/${productId}/images`;
+  },
+
+  adminProductImagesUpload(productId) {
+    return `${this.BaseURL}/admin/products/${productId}/images`;
+  },
+
+  adminProductImageUpdate(productId, imageId) {
+    return `${this.BaseURL}/admin/products/${productId}/images/${imageId}`;
+  },
+
+  adminProductImageDelete(productId, imageId) {
+    return `${this.BaseURL}/admin/products/${productId}/images/${imageId}`;
+  },
+
+  adminProductImagesReorder(productId) {
+    return `${this.BaseURL}/admin/products/${productId}/images/reorder`;
+  },
+
+  adminProductImageSetCover(productId, imageId) {
+    return `${this.BaseURL}/admin/products/${productId}/images/${imageId}/cover`;
+  },
 };
 
 export default AppURL;

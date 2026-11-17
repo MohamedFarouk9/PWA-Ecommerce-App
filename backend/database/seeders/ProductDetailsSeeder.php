@@ -145,17 +145,13 @@ class ProductDetailsSeeder extends Seeder
             }
 
             foreach ($specifications as $spec) {
-                ProductSpecification::updateOrCreate(
-                    [
-                        'product_id' => $product->id,
-                        'product_attribute_id' => $spec['attribute_id'],
-                    ],
-                    [
+                $product->specifications()->syncWithoutDetaching([
+                    $spec['attribute_id'] => [
                         'value' => $spec['value'],
                         'unit' => $spec['unit'],
                         'position' => $spec['position'],
                     ]
-                );
+                ]);
             }
         }
 

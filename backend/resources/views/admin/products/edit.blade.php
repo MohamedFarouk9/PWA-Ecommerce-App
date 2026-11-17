@@ -178,25 +178,35 @@
 
                 <!-- Sidebar -->
                 <div class="col-lg-4">
-                    <!-- Image Upload -->
+                    <!-- Image Management -->
                     <div class="card">
-                        <div class="card-header">
-                            <h6 class="mb-0"><i class="bx bx-image me-2"></i>Product Image</h6>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bx bx-images me-2"></i>Product Images</h6>
+                            <button type="button" class="btn btn-sm btn-primary" id="openImageManager" data-bs-toggle="modal" data-bs-target="#imageManagerModal">
+                                <i class="bx bx-edit me-1"></i>Manage Images
+                            </button>
                         </div>
                         <div class="card-body text-center">
                             <div class="mb-3">
                                 @if($product->images->count())
-                                    <div class="row g-2">
+                                    <div class="row g-2" id="imagePreviewGrid">
                                         @foreach($product->images as $img)
                                             <div class="col-4">
-                                                <img src="{{ $img->url }}" alt="Product Image {{ $loop->iteration }}"
-                                                     class="img-fluid rounded shadow" style="width: 100%; height: 120px; object-fit: cover;">
+                                                <div class="position-relative">
+                                                    <img src="{{ $img->url }}" alt="Product Image {{ $loop->iteration }}"
+                                                         class="img-fluid rounded shadow" style="width: 100%; height: 100px; object-fit: cover;">
+                                                    @if($img->is_cover)
+                                                        <span class="position-absolute top-0 start-0 m-1 badge bg-success">
+                                                            <i class="bx bx-check me-1"></i>Cover
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         @endforeach
                                     </div>
                                 @else
                                     <div class="bg-light rounded shadow d-flex align-items-center justify-content-center"
-                                         style="width: 200px; height: 200px; margin: 0 auto;">
+                                         style="width: 200px; height: 120px; margin: 0 auto;">
                                         <div class="text-muted text-center">
                                             <i class="bx bx-image fs-1"></i>
                                             <p class="mb-0 mt-2">No Images</p>
@@ -214,6 +224,25 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             <small class="text-muted">Recommended: 400x400px or larger</small>
+                        </div>
+                    </div>
+
+                    <!-- Image Manager Modal -->
+                    <div class="modal fade" id="imageManagerModal" tabindex="-1" aria-labelledby="imageManagerModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="imageManagerModalLabel">
+                                        <i class="bx bx-images me-2"></i>Image Manager - {{ $product->name }}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div id="imageManagerContainer">
+                                        <!-- Image manager will be loaded here via AJAX -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -323,6 +352,454 @@
         // Hide variants section if no attributes available
         if (attributes.length === 0) {
             $('.card:contains("Product Variants")').hide();
+        }
+
+       // ===== IMAGE MANAGER FUNCTIONALITY =====
+        @php
+            $imageData = $product->images->map(function ($img) {
+                return [
+                    'id'       => $img->id,
+                    'path'     => $img->path,
+                    'position' => $img->position,
+                    'is_cover' => $img->is_cover,
+                    'url'      => $img->url,
+                ];
+            })->values()->toArray();
+        @endphp
+
+        let productId = @json($product->id);
+        let images = @json($imageData);
+
+        // Load Image Manager Modal Content
+        $('#imageManagerModal').on('show.bs.modal', function () {
+            loadImageManager();
+        });
+
+        function loadImageManager() {
+            $.ajax({
+                url: `/api/admin/products/${productId}/images`,
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('api_token')
+                },
+                success: function(response) {
+                    renderImageManager(response.data.images);
+                },
+                error: function(xhr) {
+                    // Fallback to local data if API fails
+                    renderImageManager(images);
+                }
+            });
+        }
+
+        function renderImageManager(imageData) {
+            images = imageData;
+            let html = `
+                <div class="image-manager">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Drag to reorder • Click star to set cover</h6>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button type="button" class="btn btn-primary" id="uploadNewImages" data-bs-toggle="modal" data-bs-target="#uploadImagesModal">
+                                <i class="bx bx-upload me-1"></i>Upload Images
+                            </button>
+                        </div>
+                    </div>
+                    <div class="image-grid" id="imageGrid">
+            `;
+
+            if (images.length === 0) {
+                html += `
+                    <div class="col-12 text-center py-5">
+                        <i class="bx bx-image" style="font-size: 48px; color: #ccc;"></i>
+                        <h5 class="text-muted mt-2">No images yet</h5>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadImagesModal">
+                            <i class="bx bx-upload me-1"></i>Upload First Image
+                        </button>
+                    </div>
+                `;
+            } else {
+                images.forEach((image, index) => {
+                    html += `
+                        <div class="image-item" data-image-id="${image.id}" draggable="true">
+                            <div class="image-thumbnail">
+                                <img src="${image.urls.thumbnail}" alt="Image ${index + 1}" loading="lazy">
+                                ${image.is_cover ? '<span class="cover-badge"><i class="bx bx-check"></i> Cover</span>' : ''}
+                                <span class="position-indicator">#${index + 1}</span>
+                            </div>
+                            <div class="image-actions">
+                                <button class="btn-action ${image.is_cover ? 'active' : ''}"
+                                        onclick="setCover(${image.id})"
+                                        ${image.is_cover ? 'disabled' : ''}
+                                        title="Set as Cover">
+                                    <i class="bx bx-star"></i>
+                                </button>
+                                <a href="${image.urls.original}" target="_blank" class="btn-action" title="View Full Size">
+                                    <i class="bx bx-show"></i>
+                                </a>
+                                <a href="${image.urls.original}" download class="btn-action" title="Download">
+                                    <i class="bx bx-download"></i>
+                                </a>
+                                <button class="btn-action danger" onclick="deleteImage(${image.id})" title="Delete">
+                                    <i class="bx bx-trash"></i>
+                                </button>
+                            </div>
+                            <div class="drag-handle" title="Drag to reorder">
+                                <i class="bx bx-move"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `
+                    </div>
+                </div>
+
+                <!-- Upload Images Modal -->
+                <div class="modal fade" id="uploadImagesModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="bx bx-upload me-2"></i>Upload New Images</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="upload-area" id="dropZone">
+                                    <input type="file" id="uploadFiles" multiple accept="image/*" style="display: none;">
+                                    <i class="bx bx-upload" style="font-size: 48px; color: #007bff;"></i>
+                                    <h5 class="mt-3">Drag & drop images here or click to browse</h5>
+                                    <p class="text-muted">Max 10 images • 5MB each • JPEG, PNG, WebP</p>
+                                </div>
+                                <div id="selectedFilesList" class="mt-3" style="display: none;"></div>
+                                <div id="uploadProgress" class="mt-3" style="display: none;">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Uploading...</span>
+                                        <span id="uploadPercent">0%</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="confirmUpload" disabled>
+                                    <i class="bx bx-upload me-1"></i>Upload <span id="fileCount">0</span> Image(s)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            $('#imageManagerContainer').html(html);
+            initDragAndDrop();
+            initUploadModal();
+        }
+
+        // Drag and Drop Reordering
+        function initDragAndDrop() {
+            const grid = document.getElementById('imageGrid');
+            let draggedItem = null;
+
+            grid.addEventListener('dragstart', (e) => {
+                const item = e.target.closest('.image-item');
+                if (item) {
+                    draggedItem = item;
+                    item.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+
+            grid.addEventListener('dragend', (e) => {
+                const item = e.target.closest('.image-item');
+                if (item) {
+                    item.classList.remove('dragging');
+                }
+                draggedItem = null;
+            });
+
+            grid.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const item = e.target.closest('.image-item');
+                if (item && item !== draggedItem) {
+                    const rect = item.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+
+                    if (e.clientY < midY) {
+                        item.style.borderTop = '3px solid #007bff';
+                        item.style.borderBottom = 'none';
+                    } else {
+                        item.style.borderBottom = '3px solid #007bff';
+                        item.style.borderTop = 'none';
+                    }
+                }
+            });
+
+            grid.addEventListener('dragleave', (e) => {
+                const item = e.target.closest('.image-item');
+                if (item) {
+                    item.style.borderTop = 'none';
+                    item.style.borderBottom = 'none';
+                }
+            });
+
+            grid.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.image-item');
+                if (target && draggedItem && target !== draggedItem) {
+                    target.style.borderTop = 'none';
+                    target.style.borderBottom = 'none';
+
+                    const rect = target.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+
+                    if (e.clientY < midY) {
+                        grid.insertBefore(draggedItem, target);
+                    } else {
+                        grid.insertBefore(draggedItem, target.nextSibling);
+                    }
+
+                    // Update positions
+                    saveImageOrder();
+                }
+            });
+        }
+
+        function saveImageOrder() {
+            const items = document.querySelectorAll('#imageGrid .image-item');
+            const imageIds = Array.from(items).map(item => item.dataset.imageId);
+
+            $.ajax({
+                url: `/api/admin/products/${productId}/images/reorder`,
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('api_token'),
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({ image_ids: imageIds }),
+                success: function(response) {
+                    // Update position indicators
+                    items.forEach((item, index) => {
+                        item.querySelector('.position-indicator').textContent = '#' + (index + 1);
+                    });
+                    showToast('Image order updated', 'success');
+                },
+                error: function() {
+                    showToast('Failed to reorder images', 'error');
+                    loadImageManager(); // Reload to reset
+                }
+            });
+        }
+
+        // Set Cover Image
+        window.setCover = function(imageId) {
+            $.ajax({
+                url: `/api/admin/products/${productId}/images/${imageId}/cover`,
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('api_token')
+                },
+                success: function() {
+                    loadImageManager();
+                    showToast('Cover image updated', 'success');
+                },
+                error: function() {
+                    showToast('Failed to set cover image', 'error');
+                }
+            });
+        };
+
+        // Delete Image
+        window.deleteImage = function(imageId) {
+            if (!confirm('Delete this image? This cannot be undone.')) return;
+
+            $.ajax({
+                url: `/api/admin/products/${productId}/images/${imageId}`,
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('api_token')
+                },
+                success: function() {
+                    loadImageManager();
+                    showToast('Image deleted', 'success');
+                },
+                error: function() {
+                    showToast('Failed to delete image', 'error');
+                }
+            });
+        };
+
+        // Upload Modal
+        function initUploadModal() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('uploadFiles');
+            const selectedFilesList = document.getElementById('selectedFilesList');
+            const confirmBtn = document.getElementById('confirmUpload');
+            let selectedFiles = [];
+
+            // Click to select
+            dropZone.addEventListener('click', () => fileInput.click());
+
+            // Drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                handleFiles(dt.files);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            function handleFiles(files) {
+                selectedFiles = [];
+                Array.from(files).forEach(file => {
+                    if (!file.type.startsWith('image/')) {
+                        showToast(`${file.name}: Not an image file`, 'error');
+                        return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                        showToast(`${file.name}: Exceeds 5MB limit`, 'error');
+                        return;
+                    }
+                    if (selectedFiles.length >= 10) {
+                        showToast('Maximum 10 images allowed', 'error');
+                        return;
+                    }
+                    selectedFiles.push(file);
+                });
+                updateFileList();
+            }
+
+            function updateFileList() {
+                if (selectedFiles.length === 0) {
+                    selectedFilesList.style.display = 'none';
+                    confirmBtn.disabled = true;
+                    return;
+                }
+
+                selectedFilesList.style.display = 'block';
+                confirmBtn.disabled = false;
+                document.getElementById('fileCount').textContent = selectedFiles.length;
+
+                selectedFilesList.innerHTML = `
+                    <h6>Selected (${selectedFiles.length}):</h6>
+                    <ul class="list-unstyled">
+                        ${selectedFiles.map((file, i) => `
+                            <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                <span>${file.name}</span>
+                                <span class="badge bg-secondary">${(file.size / 1024).toFixed(1)} KB</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            }
+
+            // Upload handler
+            confirmBtn.addEventListener('click', async () => {
+                if (selectedFiles.length === 0) return;
+
+                const formData = new FormData();
+                selectedFiles.forEach(file => formData.append('images', file));
+
+                const progressContainer = document.getElementById('uploadProgress');
+                const progressBar = document.getElementById('progressBar');
+                const uploadPercent = document.getElementById('uploadPercent');
+
+                progressContainer.style.display = 'block';
+                confirmBtn.disabled = true;
+
+                try {
+                    // Use XHR for progress tracking
+                    await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+
+                        xhr.upload.addEventListener('progress', (e) => {
+                            if (e.lengthComputable) {
+                                const percent = Math.round((e.loaded / e.total) * 100);
+                                progressBar.style.width = percent + '%';
+                                uploadPercent.textContent = percent + '%';
+                            }
+                        });
+
+                        xhr.addEventListener('load', () => {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve(JSON.parse(xhr.responseText));
+                            } else {
+                                reject(new Error('Upload failed'));
+                            }
+                        });
+
+                        xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+
+                        xhr.open('POST', `/api/admin/products/${productId}/images`);
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('api_token'));
+                        xhr.send(formData);
+                    });
+
+                    selectedFiles = [];
+                    fileInput.value = '';
+                    updateFileList();
+                    progressContainer.style.display = 'none';
+                    loadImageManager();
+
+                    // Close upload modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('uploadImagesModal'));
+                    modal?.hide();
+
+                    showToast('Images uploaded successfully', 'success');
+                } catch (err) {
+                    showToast('Upload failed: ' + err.message, 'error');
+                    confirmBtn.disabled = false;
+                    progressContainer.style.display = 'none';
+                }
+            });
+        }
+
+        // Toast helper
+        function showToast(message, type = 'info') {
+            // Use existing toast system or create simple one
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'primary'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(container);
+            }
+            container.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+            bsToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
         }
     });
 </script>

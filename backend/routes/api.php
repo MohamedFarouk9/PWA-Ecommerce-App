@@ -114,6 +114,16 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
     Route::delete('/sections/{section}', [\App\Http\Controllers\Admin\ProductController::class, 'destroySection']);
     Route::post('/sections/{section}/assign-products', [\App\Http\Controllers\Admin\ProductController::class, 'assignProducts']);
     Route::get('/sections/{section}/products', [\App\Http\Controllers\Admin\ProductController::class, 'productsBySection']);
+
+    // Product Image Management
+    Route::prefix('products/{productId}/images')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ProductImageController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Admin\ProductImageController::class, 'store']);
+        Route::put('/{imageId}', [\App\Http\Controllers\Admin\ProductImageController::class, 'update']);
+        Route::delete('/{imageId}', [\App\Http\Controllers\Admin\ProductImageController::class, 'destroy']);
+        Route::post('/reorder', [\App\Http\Controllers\Admin\ProductImageController::class, 'reorder']);
+        Route::post('/{imageId}/cover', [\App\Http\Controllers\Admin\ProductImageController::class, 'setCover']);
+    });
 });
 
 // Health check route

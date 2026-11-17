@@ -36,6 +36,7 @@ use App\Repositories\Eloquent\NotificationRepository;
 use App\Repositories\Eloquent\PaymentRepository;
 use App\Repositories\Eloquent\ReviewRepository;
 use App\Services\ImageService;
+use App\Services\ImageOptimizationService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -150,6 +151,11 @@ class AppServiceProvider extends ServiceProvider
         // Image Service Binding
         $this->app->singleton(ImageService::class, function () {
             return new ImageService();
+        });
+
+        // Image Optimization Service Binding
+        $this->app->singleton(ImageOptimizationService::class, function () {
+            return new ImageOptimizationService();
         });
     }
 

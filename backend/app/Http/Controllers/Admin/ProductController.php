@@ -6,6 +6,7 @@ use App\Http\Requests\Admin\Products\StoreRequest;
 use App\Http\Requests\Admin\Products\UpdateRequest;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\ImageOptimizationService;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -13,8 +14,10 @@ use Illuminate\Support\Facades\Storage;
 
 final class ProductController extends Controller
 {
-    public function __construct(private ProductService $service)
-    {
+    public function __construct(
+        private ProductService $service,
+        private ImageOptimizationService $imageOptimizationService
+    ) {
     }
 
     public function index(Request $request)
@@ -75,7 +78,7 @@ final class ProductController extends Controller
         // Delete existing product images and their files first.
         $product->load('images');
         foreach ($product->images as $image) {
-            Storage::disk('public')->delete($image->path);
+            $this->imageOptimizationService->deleteProductImages($product->id, $image->path);
         }
         $product->images()->delete();
 
@@ -87,18 +90,24 @@ final class ProductController extends Controller
         }
 
         foreach ($files as $position => $file) {
-            $path = $file->store('products', 'public');
-            ProductImage::create([
-                'product_id' => $product->id,
-                'path' => $path,
-                'position' => $position + 1,
-                'is_cover' => $position === 0,
-            ]);
+            // Upload and optimize image using ImageOptimizationService
+            $result = $this->imageOptimizationService->uploadProductImage($file, $product->id);
+
+            if ($result['success']) {
+                ProductImage::create([
+                    'product_id' => $product->id,
+                    'path' => $result['original_path'], // Store original path for reference
+                    'position' => $position + 1,
+                    'is_cover' => $position === 0,
+                ]);
+            }
         }
     }
 
     public function destroy(Product $product)
     {
+        // Delete all product images before deleting product
+        $this->imageOptimizationService->deleteProductImages($product->id);
         $this->service->delete($product);
         return response()->json(['message' => 'Product deleted successfully']);
     }

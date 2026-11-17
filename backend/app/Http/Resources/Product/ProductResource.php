@@ -62,16 +62,9 @@ class ProductResource extends JsonResource
                 'position' => 0,
             ]);
         }
-        // Add gallery images
+        // Add gallery images using ImageResource for optimized URLs
         if ($this->relationLoaded('images')) {
-            foreach ($this->images as $image) {
-                $allImages->push([
-                    'id' => $image->id,
-                    'url' => $image->url ?? asset('storage/' . $image->path),
-                    'path' => $image->path,
-                    'position' => $image->position,
-                ]);
-            }
+            $allImages = $allImages->merge(ImageResource::collection($this->images)->resolve());
         }
 
         // Calculate average rating and review count
