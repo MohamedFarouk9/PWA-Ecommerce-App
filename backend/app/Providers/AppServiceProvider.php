@@ -35,6 +35,7 @@ use App\Repositories\Eloquent\ContactRepository;
 use App\Repositories\Eloquent\NotificationRepository;
 use App\Repositories\Eloquent\PaymentRepository;
 use App\Repositories\Eloquent\ReviewRepository;
+use App\Services\ImageService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -145,6 +146,11 @@ class AppServiceProvider extends ServiceProvider
             OrderRepository::class
 
         );
+
+        // Image Service Binding
+        $this->app->singleton(ImageService::class, function () {
+            return new ImageService();
+        });
     }
 
     /**

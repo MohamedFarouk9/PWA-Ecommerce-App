@@ -4,56 +4,50 @@ namespace Database\Seeders;
 
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\ImageService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductImageSeeder extends Seeder
 {
+    private ImageService $imageService;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->imageService = app(ImageService::class);
+    }
+
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
+        $this->command->info('Starting Product Image Seeding with Real Images...');
+
+        // Ensure storage directory exists
         Storage::disk('public')->makeDirectory('products');
 
-        Product::chunk(50, function ($products) {
-            foreach ($products as $product) {
-                if ($product->images()->exists()) {
-                    continue;
-                }
+        $results = $this->imageService->seedProductImages();
 
-                $colors = ['ff6b6b', '6bc4ff', '6bff99', 'ffd56b', 'a76fff'];
+        $this->command->info("Image Seeding Complete!");
+        $this->command->info("Successfully seeded: {$results['success']} products");
+        $this->command->info("Failed: {$results['failed']} products");
+        $this->command->info("Skipped (already had images): {$results['skipped']} products");
 
-                for ($position = 0; $position < 3; $position++) {
-                    $path = "products/{$product->id}-image-{$position}.png";
-                    $fullPath = public_path('storage/' . $path);
-                    $directory = dirname($fullPath);
-
-                    if (! is_dir($directory)) {
-                        mkdir($directory, 0755, true);
-                    }
-
-                    if (function_exists('imagecreatetruecolor')) {
-                        $image = imagecreatetruecolor(800, 800);
-                        $hex = $colors[$position % count($colors)];
-                        $red = hexdec(substr($hex, 0, 2));
-                        $green = hexdec(substr($hex, 2, 2));
-                        $blue = hexdec(substr($hex, 4, 2));
-                        $background = imagecolorallocate($image, $red, $green, $blue);
-                        imagefilledrectangle($image, 0, 0, 800, 800, $background);
-                        $textColor = imagecolorallocate($image, 255, 255, 255);
-                        imagestring($image, 5, 20, 20, "Product {$product->id} - Image " . ($position + 1), $textColor);
-                        imagepng($image, $fullPath);
-                        imagedestroy($image);
-                    } else {
-                        file_put_contents($fullPath, '');
-                    }
-
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'path' => $path,
-                        'position' => $position + 1,
-                        'is_cover' => $position === 0,
-                    ]);
-                }
-            }
-        });
+        if (!empty($results['details'])) {
+            $this->command->table(
+                ['Product ID', 'Product Name', 'Images Downloaded', 'Category'],
+                array_map(function ($detail) {
+                    return [
+                        $detail['product_id'] ?? 'N/A',
+                        $detail['product_name'] ?? 'N/A',
+                        $detail['images_downloaded'] ?? ($detail['error'] ?? 'N/A'),
+                        $detail['category'] ?? 'N/A',
+                    ];
+                }, $results['details'])
+            );
+        }
     }
 }

@@ -5,25 +5,33 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
-class DatabaseSeeder extends Seeder {
+class DatabaseSeeder extends Seeder
+{
     /**
      * Seed the application's database.
      */
-    public function run(): void {
+    public function run(): void
+    {
         $this->call([
             RolePermissionSeeder::class,
             UserSeeder::class,
 
-            // Then other data
+            // Core product structure
             ProductStatusSeeder::class,
             ProductCategorySeeder::class,
             ProductAttributeSeeder::class,
             SectionSeeder::class,
+
+            // Products and related data
             ProductSeeder::class,
-            ProductImageSeeder::class,
+            ProductDetailsSeeder::class,      // NEW: Brand, SKU, color, size, specs
+            ShowcaseProductsSeeder::class,    // NEW: 10 showcase products with real images
+            ProductImageSeeder::class,        // Enhanced with real images from Picsum
             ProductVariantSeeder::class,
             ProductTagSeeder::class,
             ProductReviewSeeder::class,
+
+            // Other data
             CartSeeder::class,
             ContactSeeder::class,
             SiteSettingSeeder::class,
