@@ -24,14 +24,18 @@ class ProductDetailsSeeder extends Seeder
         $warrantyAttr = ProductAttribute::firstOrCreate(['name' => 'Warranty']);
         $dimensionsAttr = ProductAttribute::firstOrCreate(['name' => 'Dimensions']);
         $weightAttr = ProductAttribute::firstOrCreate(['name' => 'Weight']);
+        $networkAttr = ProductAttribute::firstOrCreate(['name' => 'Network']);
+        $processorAttr = ProductAttribute::firstOrCreate(['name' => 'Processor']);
+        $memoryAttr = ProductAttribute::firstOrCreate(['name' => 'RAM']);
+        $storageAttr = ProductAttribute::firstOrCreate(['name' => 'Storage']);
 
         // Get products (take a sample for demo)
-        $products = Product::where('product_status_id', 1)->take(100)->get();
+        $products = Product::where('product_status_id', 1)->get();
 
         foreach ($products as $product) {
             // Assign brand
             if (!$product->brand) {
-                $brands = ['Apple', 'Samsung', 'Sony', 'Dell', 'Nike', 'Adidas', 'bose', 'Logitech'];
+                $brands = ['Apple', 'Samsung', 'Sony', 'Dell', 'Nike', 'Adidas', 'Bose', 'Logitech'];
                 $product->update(['brand' => $brands[array_rand($brands)]]);
             }
 
@@ -45,7 +49,14 @@ class ProductDetailsSeeder extends Seeder
             // Assign SKU
             if (!$product->sku) {
                 $product->update([
-                    'sku' => 'SKU-' . $product->id . '-' . Str::lower($product->name),
+                    'sku' => 'SKU-' . $product->id . '-' . Str::lower(preg_replace('/[^a-zA-Z0-9]/', '', $product->name)),
+                ]);
+            }
+
+            // Set view count (random for variety)
+            if ($product->view_count === 0) {
+                $product->update([
+                    'view_count' => rand(100, 5000),
                 ]);
             }
 
@@ -64,51 +75,87 @@ class ProductDetailsSeeder extends Seeder
                 'size' => $sizes,
             ]);
 
-            // Add specifications for this product
+            // Build specifications based on product type
             $specifications = [
                 ['attribute_id' => $colorAttr->id, 'value' => $colors[array_rand($colors)], 'unit' => null, 'position' => 1],
                 ['attribute_id' => $sizeAttr->id, 'value' => $sizes[array_rand($sizes)], 'unit' => null, 'position' => 2],
                 ['attribute_id' => $materialAttr->id, 'value' => 'Premium Materials', 'unit' => null, 'position' => 3],
             ];
 
-            // For electronics, add battery/dimensions
-            if (in_array($product->id % 3, [0, 1])) { // ~66% of products
+            // For electronics (based on category or product name), add specialized specs
+            $productName = strtolower($product->name);
+            $isElectronic = (
+                str_contains($productName, 'laptop') ||
+                str_contains($productName, 'phone') ||
+                str_contains($productName, 'headphone') ||
+                str_contains($productName, 'tablet') ||
+                str_contains($productName, 'watch') ||
+                str_contains($productName, 'speaker') ||
+                str_contains($productName, 'monitor') ||
+                str_contains($productName, 'keyboard') ||
+                str_contains($productName, 'mouse')
+            );
+
+            if ($isElectronic) {
                 $specifications[] = [
                     'attribute_id' => $batteryAttr->id,
-                    'value' => rand(1000, 10000),
+                    'value' => rand(2000, 10000),
                     'unit' => 'mAh',
                     'position' => 4,
                 ];
                 $specifications[] = [
                     'attribute_id' => $warrantyAttr->id,
-                    'value' => rand(6, 24),
-                    'unit' => 'months',
+                    'value' => rand(1, 3) . ' years',
+                    'unit' => null,
                     'position' => 5,
                 ];
+                $specifications[] = [
+                    'attribute_id' => $networkAttr->id,
+                    'value' => rand(2, 5) . '-G',
+                    'unit' => null,
+                    'position' => 6,
+                ];
+                $specifications[] = [
+                    'attribute_id' => $processorAttr->id,
+                    'value' => rand(1, 8) . ' GHz',
+                    'unit' => null,
+                    'position' => 7,
+                ];
+                $specifications[] = [
+                    'attribute_id' => $memoryAttr->id,
+                    'value' => rand(4, 32) . 'GB',
+                    'unit' => null,
+                    'position' => 8,
+                ];
             }
-            if (in_array($product->id % 2, [0, 1])) { // ~50% of products
+
+            if (in_array($product->id % 3, [0, 1])) { // ~66% of products
                 $specifications[] = [
                     'attribute_id' => $dimensionsAttr->id,
                     'value' => rand(10, 30) . ' x ' . rand(15, 40),
                     'unit' => 'cm',
-                    'position' => 6,
+                    'position' => count($specifications) + 1,
                 ];
                 $specifications[] = [
                     'attribute_id' => $weightAttr->id,
                     'value' => rand(100, 1000),
                     'unit' => 'g',
-                    'position' => 7,
+                    'position' => count($specifications) + 2,
                 ];
             }
 
             foreach ($specifications as $spec) {
-                ProductSpecification::create([
-                    'product_id' => $product->id,
-                    'product_attribute_id' => $spec['attribute_id'],
-                    'value' => $spec['value'],
-                    'unit' => $spec['unit'],
-                    'position' => $spec['position'],
-                ]);
+                ProductSpecification::updateOrCreate(
+                    [
+                        'product_id' => $product->id,
+                        'product_attribute_id' => $spec['attribute_id'],
+                    ],
+                    [
+                        'value' => $spec['value'],
+                        'unit' => $spec['unit'],
+                        'position' => $spec['position'],
+                    ]
+                );
             }
         }
 

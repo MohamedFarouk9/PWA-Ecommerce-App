@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
 import EnhancedProductDetails from "../components/ProductDetails/EnhancedProductDetails";
-import ImprovedSuggestedProduct from "../components/ProductDetails/EnhancedSuggestedProduct";
 import { useParams } from "react-router";
 import AppURL from "../utils/AppURL";
 import ToastMessages from "../toast-messages/toast";
 import { ResponsiveLayout } from "../layouts/ResponsiveLayout";
 import apiClient from "../services/apiClient";
-import "../assets/css/AmazonProductPage.css";
-import "../assets/css/relatedProductsCard.css";
 
 const ProductDetailsPage = () => {
   const { productId } = useParams();

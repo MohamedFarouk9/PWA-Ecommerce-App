@@ -5,7 +5,6 @@ import {
   Col,
   Breadcrumb,
   Badge,
-  Spinner,
   Tooltip,
   OverlayTrigger,
 } from "react-bootstrap";
@@ -15,9 +14,8 @@ import "react-loading-skeleton/dist/skeleton.css";
 import ToastMessages from "../../toast-messages/toast";
 import { AuthContext } from "../../utils/AuthContext";
 import { CartContext } from "../../utils/CartContext";
-import AppURL from "../../utils/AppURL";
-import apiClient from "../../services/apiClient";
-import "./AmazonProductPage.css";
+import "../../assets/css/AmazonProductPage.css";
+import EnhancedSuggestedProduct from "./EnhancedSuggestedProduct";
 
 const EnhancedProductDetails = ({ productData, message }) => {
   const [previewImg, setPreviewImg] = useState(null);
@@ -25,9 +23,6 @@ const EnhancedProductDetails = ({ productData, message }) => {
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { token } = useContext(AuthContext);
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
 
@@ -226,7 +221,7 @@ const EnhancedProductDetails = ({ productData, message }) => {
   };
 
   // Loading state
-  if (!productData && loading) {
+  if (!productData || !product) {
     return (
       <Container className="product-details-container">
         <Row>
@@ -241,15 +236,6 @@ const EnhancedProductDetails = ({ productData, message }) => {
             <Skeleton height={50} />
           </Col>
         </Row>
-      </Container>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <Container className="text-center py-5">
-        <h3 className="text-danger">{error}</h3>
       </Container>
     );
   }
@@ -545,7 +531,7 @@ const EnhancedProductDetails = ({ productData, message }) => {
       <div className="related-products-section mt-5">
         <h3 className="related-products-title">YOU MAY ALSO LIKE</h3>
         {/* This will be populated by SuggestedProduct component */}
-        <SuggestedProduct product_id={product?.id} />
+        <EnhancedSuggestedProduct product_id={product?.id} />
       </div>
     </Container>
   );
