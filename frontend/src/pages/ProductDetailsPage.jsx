@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import ProductDetails from "../components/ProductDetails/ProductDetails";
+import EnhancedProductDetails from "../components/ProductDetails/EnhancedProductDetails";
+import ImprovedSuggestedProduct from "../components/ProductDetails/EnhancedSuggestedProduct";
 import { useParams } from "react-router";
 import AppURL from "../utils/AppURL";
 import ToastMessages from "../toast-messages/toast";
 import { ResponsiveLayout } from "../layouts/ResponsiveLayout";
 import apiClient from "../services/apiClient";
+import "../assets/css/AmazonProductPage.css";
+import "../assets/css/relatedProductsCard.css";
 
 const ProductDetailsPage = () => {
   const { productId } = useParams();
@@ -19,19 +22,32 @@ const ProductDetailsPage = () => {
     const fetchProductDetails = async () => {
       try {
         const response = await apiClient.get(AppURL.ProductDetails(productId));
-        const payload = response.data?.data?.product ?? response.data?.product ?? response.data;
+        let payload = response.data?.data?.product ?? response.data?.product ?? response.data;
 
         if (response.data?.message) {
           setMessage(response.data.message);
         }
 
-        // Normalize payload so components expecting { product: {...} } keep working
-        if (payload && payload.id) {
-          setProductData({ product: payload });
-        } else {
-          setProductData(payload);
+        // Ensure payload has expected structure
+        if (!payload || !payload.id) {
+          setError("Product not found");
+          return;
         }
+
+        // Ensure nested objects are properly initialized
+        if (!payload.rating) {
+          payload.rating = { average: 0, count: 0, breakdown: {} };
+        }
+        if (!payload.images) {
+          payload.images = [];
+        }
+        if (!payload.reviews) {
+          payload.reviews = [];
+        }
+
+        setProductData({ product: payload });
       } catch (error) {
+        console.error("Product fetch error:", error);
         setError(
           ToastMessages.showError("Failed to load product details Information.")
         );
@@ -45,7 +61,7 @@ const ProductDetailsPage = () => {
 
   return (
     <ResponsiveLayout>
-      <ProductDetails productData={productData} message={message} />
+      <EnhancedProductDetails productData={productData} message={message} />
     </ResponsiveLayout>
   );
 };
