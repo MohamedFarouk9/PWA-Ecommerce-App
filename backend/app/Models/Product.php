@@ -72,6 +72,14 @@ class Product extends Model
     }
 
     /**
+     * Stock accessor alias for quantity.
+     */
+    public function getStockAttribute()
+    {
+        return $this->attributes['quantity'] ?? $this->quantity ?? 0;
+    }
+
+    /**
      * Get product variants (different sizes/colors in stock).
      */
     public function productVariants()

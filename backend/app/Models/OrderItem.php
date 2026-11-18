@@ -32,5 +32,13 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * Alias accessor for price as unit_price.
+     */
+    public function getUnitPriceAttribute()
+    {
+        return $this->price;
+    }
 }
 

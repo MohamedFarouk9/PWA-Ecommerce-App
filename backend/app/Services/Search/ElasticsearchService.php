@@ -151,13 +151,13 @@ class ElasticsearchService
             'id' => $product->id,
             'name' => (string) $product->name,
             'description' => (string) ($product->description ?? ''),
-            'short_desc' => (string) ($product->short_desc ?? ''),
+            'short_desc' => (string) ($product->short_description ?? $product->short_desc ?? ''),
             'price' => (float) ($product->price ?? 0),
             'special_price' => (float) ($product->special_price ?? 0),
             'category_id' => (int) ($product->product_category_id ?? 0),
             'category_name' => (string) ($product->category?->name ?? ''),
             'status' => (string) ($product->status?->name ?? 'published'),
-            'stock' => (int) ($product->stock ?? 0),
+            'stock' => (int) ($product->quantity ?? $product->stock ?? 0),
             'created_at' => $product->created_at ? $product->created_at->format('Y-m-d H:i:s') : null,
         ];
     }

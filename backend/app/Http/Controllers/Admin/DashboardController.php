@@ -253,15 +253,15 @@ class DashboardController extends Controller
      */
     private function getTopProducts()
     {
-        return Product::select('products.id', 'products.name', 'products.price', 'products.stock')
+        return Product::select('products.id', 'products.name', 'products.price', 'products.quantity as stock')
             ->selectRaw('COALESCE(COUNT(order_items.id), 0) as sales_count')
-            ->selectRaw('COALESCE(SUM(order_items.quantity * order_items.unit_price), 0) as total_revenue')
+            ->selectRaw('COALESCE(SUM(order_items.price * order_items.quantity), 0) as total_revenue')
             ->leftJoin('order_items', 'products.id', '=', 'order_items.product_id')
             ->leftJoin('orders', function ($join) {
                 $join->on('order_items.order_id', '=', 'orders.id')
                      ->where('orders.payment_status', '=', 'paid');
             })
-            ->groupBy('products.id', 'products.name', 'products.price', 'products.stock')
+            ->groupBy('products.id', 'products.name', 'products.price', 'products.quantity')
             ->orderBy('total_revenue', 'desc')
             ->limit(5)
             ->get();
