@@ -77,6 +77,14 @@
 					</a>
 				</li>
 
+				<!-- Customers -->
+				<li>
+					<a href="{{ route('admin.users.index') }}">
+						<div class="parent-icon"><i class='bx bx-group'></i></div>
+						<div class="menu-title">Customers</div>
+					</a>
+				</li>
+
 				<!-- ADMIN & SYSTEM SETTINGS -->
 				<li class="menu-label">System Settings</li>
 

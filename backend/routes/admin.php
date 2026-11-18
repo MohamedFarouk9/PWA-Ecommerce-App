@@ -6,7 +6,8 @@ use App\Http\Controllers\Admin\DashboardController;
 // use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\UserController;
+// use App\Http\Controllers\Admin\CustomerController; // replaced by UserController
 // use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\SliderController;
@@ -103,10 +104,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     Route::get('orders/{order}/tracking', [OrderController::class, 'tracking'])->name('orders.tracking');
 
-    // Customers
-    // Route::resource('customers', CustomerController::class);
-    // Route::post('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
-    // Route::get('customers/{customer}/orders', [CustomerController::class, 'orders'])->name('customers.orders');
+    // Customers / User Management
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::get('users/{id}', [UserController::class, 'show'])->name('users.show');
+    Route::get('users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::patch('users/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
     // Reviews
     // Route::resource('reviews', ReviewController::class);
