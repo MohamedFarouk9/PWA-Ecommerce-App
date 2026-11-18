@@ -53,9 +53,20 @@ class RoleController extends Controller
                 $role->syncPermissions($request->permissions);
             }
 
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'status'   => 'success',
+                    'message'  => 'Role created successfully.',
+                    'redirect' => route('admin.roles.index'),
+                ], 201);
+            }
+
             return redirect()->route('admin.roles.index')
                 ->with('success', 'Role created successfully.');
         } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Failed to create role: ' . $e->getMessage()], 400);
+            }
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Failed to create role: ' . $e->getMessage());
@@ -101,6 +112,9 @@ class RoleController extends Controller
     public function update(Request $request, Role $role)
     {
         if ($this->isSystemRole($role->name)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'System roles cannot be modified.'], 403);
+            }
             return redirect()->route('admin.roles.index')
                 ->with('error', 'System roles cannot be modified.');
         }
@@ -115,6 +129,14 @@ class RoleController extends Controller
 
         if ($request->has('permissions')) {
             $role->syncPermissions($request->permissions);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status'   => 'success',
+                'message'  => 'Role updated successfully.',
+                'redirect' => route('admin.roles.index'),
+            ]);
         }
 
         return redirect()->route('admin.roles.index')

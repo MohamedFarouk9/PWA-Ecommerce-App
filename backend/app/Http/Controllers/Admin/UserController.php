@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Models\Order;
 use App\Models\ProductReview;
 use App\Models\User;
@@ -95,22 +96,11 @@ class UserController extends Controller
     /**
      * Update user details
      */
-    public function update(Request $request, $id)
+    public function update(UpdateUserRequest $request, $id)
     {
         $user = User::findOrFail($id);
 
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'role'        => 'sometimes|string|in:admin,user',
-            'phone'       => 'nullable|string|max:30',
-            'address'     => 'nullable|string|max:500',
-            'city'        => 'nullable|string|max:100',
-            'state'       => 'nullable|string|max:100',
-            'country'     => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:20',
-            'password'    => 'nullable|string|min:8',
-        ]);
+        $validated = $request->validated();
 
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -120,12 +110,42 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        if ($request->wantsJson()) {
-            return response()->json(['status' => 'success', 'message' => 'Customer updated', 'data' => $user]);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status'   => 'success',
+                'message'  => 'Customer updated successfully.',
+                'redirect' => route('admin.users.index'),
+                'data'     => $user,
+            ]);
         }
 
         return redirect()->route('admin.users.show', $user->id)
             ->with('success', 'Customer updated successfully.');
+    }
+
+    /**
+     * Toggle user status (active / banned)
+     */
+    public function toggleStatus(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        if (auth()->id() === $user->id) {
+            return back()->with('error', 'You cannot change the status of your own account.');
+        }
+
+        $newStatus = ($user->status === 'active') ? 'banned' : 'active';
+        $user->update(['status' => $newStatus]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status'  => 'success',
+                'message' => "Customer status updated to {$newStatus}.",
+                'data'    => $user,
+            ]);
+        }
+
+        return back()->with('success', "Customer {$user->name} is now {$newStatus}.");
     }
 
     /**

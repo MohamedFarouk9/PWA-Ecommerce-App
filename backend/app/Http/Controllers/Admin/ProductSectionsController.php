@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Sections\StoreSectionRequest;
+use App\Http\Requests\Admin\Sections\UpdateSectionRequest;
 use App\Models\Product;
 use App\Repositories\Contracts\Admin\AdminSectionRepositoryInterface;
 use Illuminate\Http\Request;
@@ -31,14 +33,19 @@ class ProductSectionsController extends Controller
     /**
      * Store new section
      */
-    public function store(Request $request)
+    public function store(StoreSectionRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|unique:sections,name',
-            'label' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $this->sectionRepository->create($validated);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status'   => 'success',
+                'message'  => 'Section created successfully.',
+                'redirect' => route('admin.sections.index'),
+            ], 201);
+        }
 
         return redirect()->route('admin.sections.index')
             ->with('success', 'Section created successfully.');
@@ -57,14 +64,19 @@ class ProductSectionsController extends Controller
     /**
      * Update section
      */
-    public function update(Request $request, $id)
+    public function update(UpdateSectionRequest $request, $id)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|unique:sections,name,' . $id,
-            'label' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $this->sectionRepository->update($id, $validated);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status'   => 'success',
+                'message'  => 'Section updated successfully.',
+                'redirect' => route('admin.sections.index'),
+            ]);
+        }
 
         return redirect()->route('admin.sections.index')
             ->with('success', 'Section updated successfully.');

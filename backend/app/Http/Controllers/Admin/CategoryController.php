@@ -34,7 +34,9 @@ class CategoryController extends Controller
         $category = $this->categoryRepository->create($request->validated());
 
         return response()->json([
+            'status'   => 'success',
             'message'  => 'Category created successfully',
+            'redirect' => route('admin.categories.index'),
             'category' => $category,
         ], 201);
     }
@@ -51,7 +53,9 @@ class CategoryController extends Controller
         $category = $this->categoryRepository->update($id, $request->validated());
 
         return response()->json([
+            'status'   => 'success',
             'message'  => 'Category updated successfully',
+            'redirect' => route('admin.categories.index'),
             'category' => $category,
         ], 200);
     }

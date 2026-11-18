@@ -54,6 +54,14 @@ class PermissionController extends Controller
             $permission->roles()->sync($request->roles);
         }
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status'   => 'success',
+                'message'  => 'Permission created successfully.',
+                'redirect' => route('admin.permissions.index'),
+            ], 201);
+        }
+
         return redirect()->route('admin.permissions.index')
             ->with('success', 'Permission created successfully.');
     }
@@ -91,6 +99,9 @@ class PermissionController extends Controller
     public function update(Request $request, Permission $permission)
     {
         if ($this->isSystemPermission($permission->name)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'System permissions cannot be modified.'], 403);
+            }
             return redirect()->route('admin.permissions.index')
                 ->with('error', 'System permissions cannot be modified.');
         }
@@ -105,6 +116,14 @@ class PermissionController extends Controller
 
         if ($request->has('roles')) {
             $permission->roles()->sync($request->roles);
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status'   => 'success',
+                'message'  => 'Permission updated successfully.',
+                'redirect' => route('admin.permissions.index'),
+            ]);
         }
 
         return redirect()->route('admin.permissions.index')

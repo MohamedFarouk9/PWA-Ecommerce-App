@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Orders\UpdateOrderRequest;
 use App\Repositories\Contracts\Admin\OrderRepositoryInterface;
 use Illuminate\Http\Request;
 
@@ -78,6 +79,14 @@ class OrderController extends Controller
 
         $this->orderRepository->update(0, $validated);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status'   => 'success',
+                'message'  => 'Order created successfully.',
+                'redirect' => route('admin.orders.index'),
+            ], 201);
+        }
+
         return redirect()->route('admin.orders.index')
             ->with('success', 'Order created successfully.');
     }
@@ -109,24 +118,35 @@ class OrderController extends Controller
     /**
      * Update the specified order in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param UpdateOrderRequest $request
      * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, $id)
+    public function update(UpdateOrderRequest $request, $id)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
-            'payment_status' => 'required|in:pending,paid,failed,refunded',
-            'notes' => 'nullable|string',
-            'shipping_address' => 'nullable|string',
-            'billing_address' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $this->orderRepository->update($id, $validated);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status'   => 'success',
+                'message'  => 'Order updated successfully.',
+                'redirect' => route('admin.orders.show', $id),
+            ]);
+        }
+
         return redirect()->route('admin.orders.show', $id)
             ->with('success', 'Order updated successfully.');
+    }
+
+    /**
+     * Display printable / exportable invoice for the order
+     */
+    public function invoice($id)
+    {
+        $order = \App\Models\Order::with(['user', 'items.product.category'])->findOrFail($id);
+        return view('admin.orders.invoice', compact('order'));
     }
 
     /**
