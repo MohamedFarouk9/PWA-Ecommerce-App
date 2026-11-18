@@ -29,6 +29,9 @@ Route::get('/cart', [CartController::class, 'getCartItems']);
 Route::patch('/cart/update/{id}', [CartController::class, 'updateCart']);
 Route::delete('/cart/remove/{id}', [CartController::class, 'removeFromCart']);
 
+// Coupon Validation & Application
+Route::post('/coupons/apply', [\App\Http\Controllers\API\CouponController::class, 'apply']);
+
 // Authenticated User Routes
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', [AuthController::class, 'userProfile']);
@@ -36,6 +39,7 @@ Route::middleware('auth:api')->group(function () {
     // Orders & Checkout
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice']);
     Route::post('/orders', [OrderController::class, 'store']);
 
     // Payments (Protected against unauthorized charges)

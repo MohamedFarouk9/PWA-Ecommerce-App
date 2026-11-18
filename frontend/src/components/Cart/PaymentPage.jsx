@@ -60,6 +60,12 @@ const PaymentPage = () => {
   const [paymentResult, setPaymentResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (user) {
@@ -79,7 +85,41 @@ const PaymentPage = () => {
   }, [orderData.items]);
 
   const shipping = subtotal > 0 ? 15 : 0;
-  const total = subtotal + shipping;
+  const discountAmount = appliedCoupon ? Number(appliedCoupon.discount_amount || 0) : 0;
+  const total = Math.max(0, subtotal - discountAmount + shipping);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError(null);
+    setIsApplyingCoupon(true);
+    try {
+      const res = await apiClient.post(AppURL.ApplyCoupon, {
+        code: couponCode.trim(),
+        subtotal: subtotal,
+      });
+      if (res.data?.success) {
+        setAppliedCoupon({
+          code: res.data.coupon?.code || couponCode.trim().toUpperCase(),
+          discount_amount: Number(res.data.discount_amount || 0),
+          new_total: Number(res.data.new_total || 0),
+        });
+        ToastMessages.showSuccess(res.data.message || "Coupon applied successfully!");
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || "Invalid coupon code.";
+      setCouponError(msg);
+      ToastMessages.showError(msg);
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError(null);
+    ToastMessages.showSuccess("Coupon removed.");
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,6 +145,7 @@ const PaymentPage = () => {
         billing_address: `${formData.fullName}, ${formData.address}`,
         payment_method: selectedMethod,
         notes: formData.notes || "Order placed via Web PWA",
+        coupon_code: appliedCoupon ? appliedCoupon.code : null,
       };
 
       const orderResponse = await apiClient.post(AppURL.Orders, orderPayload);
@@ -372,10 +413,58 @@ const PaymentPage = () => {
                       <span>Subtotal</span>
                       <span>${subtotal.toFixed(2)}</span>
                     </div>
+
+                    {appliedCoupon && (
+                      <div className="d-flex justify-content-between mb-2 text-success">
+                        <span>
+                          <i className="fa fa-tag me-1"></i>
+                          Coupon ({appliedCoupon.code})
+                        </span>
+                        <span>-${discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+
                     <div className="d-flex justify-content-between mb-2">
                       <span>Shipping</span>
                       <span>${shipping.toFixed(2)}</span>
                     </div>
+
+                    {/* Coupon Input Box */}
+                    <div className="my-3 p-2 bg-light rounded border">
+                      <div className="d-flex gap-2">
+                        <Form.Control
+                          type="text"
+                          size="sm"
+                          placeholder="Coupon code (e.g. SAVE20)"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                          disabled={!!appliedCoupon || isApplyingCoupon}
+                        />
+                        {appliedCoupon ? (
+                          <Button variant="outline-danger" size="sm" onClick={handleRemoveCoupon}>
+                            Remove
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleApplyCoupon}
+                            disabled={!couponCode.trim() || isApplyingCoupon}
+                          >
+                            {isApplyingCoupon ? <Spinner size="sm" animation="border" /> : "Apply"}
+                          </Button>
+                        )}
+                      </div>
+                      {couponError && (
+                        <small className="text-danger d-block mt-1">{couponError}</small>
+                      )}
+                      {appliedCoupon && (
+                        <small className="text-success d-block mt-1">
+                          <i className="fa fa-check me-1"></i> Coupon active! Saved ${discountAmount.toFixed(2)}
+                        </small>
+                      )}
+                    </div>
+
                     <hr />
                     <div className="d-flex justify-content-between fw-bold fs-5">
                       <span>Total</span>

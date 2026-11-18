@@ -51,6 +51,7 @@ const AppURL = {
   OrderDetails(id) {
     return `${this.BaseURL}/orders/${id}`;
   },
+  ApplyCoupon: `${BaseURL}/coupons/apply`,
   PaymentCharge: `${BaseURL}/payment/charge`,
   PaymentWebhook: `${BaseURL}/payment/webhook`,
 

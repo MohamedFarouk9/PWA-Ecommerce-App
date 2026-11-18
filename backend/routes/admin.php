@@ -8,8 +8,9 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserController;
 // use App\Http\Controllers\Admin\CustomerController; // replaced by UserController
-// use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\ProductSectionsController;
 // use App\Http\Controllers\Admin\SettingController;
@@ -103,6 +104,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
     Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     Route::get('orders/{order}/tracking', [OrderController::class, 'tracking'])->name('orders.tracking');
+    Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
 
     // Customers / User Management
     Route::get('users', [UserController::class, 'index'])->name('users.index');
@@ -110,17 +112,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::patch('users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::post('users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 
-    // Reviews
-    // Route::resource('reviews', ReviewController::class);
-    // Route::post('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
-    // Route::post('reviews/{review}/reject', [ReviewController::class, 'reject'])->name('reviews.reject');
-    // Route::post('reviews/bulk-action', [ReviewController::class, 'bulkAction'])->name('reviews.bulk-action');
+    // Reviews Moderation
+    Route::resource('reviews', ReviewController::class);
+    Route::post('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
+    Route::post('reviews/{review}/reject', [ReviewController::class, 'reject'])->name('reviews.reject');
 
     // Contact Messages
     Route::resource('contacts', ContactController::class);
+    Route::post('contacts/mark-all-read', [ContactController::class, 'markAllRead'])->name('contacts.mark-all-read');
     Route::post('contacts/{contact}/mark-read', [ContactController::class, 'markRead'])->name('contacts.mark-read');
-    Route::post('contacts/bulk-action', [ContactController::class, 'bulkAction'])->name('contacts.bulk-action');
+    Route::post('contacts/{contact}/reply', [ContactController::class, 'reply'])->name('contacts.reply');
+
+    // Coupons & Discounts
+    Route::resource('coupons', CouponController::class);
+    Route::post('coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('coupons.toggle-status');
 
     // Sliders
     Route::get('sliders', [SliderController::class, 'index'])->name('sliders.index');
