@@ -19,18 +19,28 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $stats = $this->getDashboardStats();
-        $chartData = $this->getChartData();
+        $stats        = $this->getDashboardStats();
+        $chartData    = $this->getChartData();
         $recentOrders = $this->getRecentOrders();
         $recentReviews = $this->getRecentReviews();
-        $topProducts = $this->getTopProducts();
+        $topProducts  = $this->getTopProducts();
+
+        // Product Recommendation Engine data
+        $lowStockProducts    = $this->getLowStockProducts();
+        $trendingProducts    = $this->getTrendingProducts();
+        $deadStockProducts   = $this->getDeadStockProducts();
+        $categoryRevenue     = $this->getCategoryRevenue();
 
         return view('admin.dashboard', compact(
             'stats',
             'chartData',
             'recentOrders',
             'recentReviews',
-            'topProducts'
+            'topProducts',
+            'lowStockProducts',
+            'trendingProducts',
+            'deadStockProducts',
+            'categoryRevenue'
         ));
     }
 
@@ -264,6 +274,84 @@ class DashboardController extends Controller
             ->groupBy('products.id', 'products.name', 'products.price', 'products.quantity')
             ->orderBy('total_revenue', 'desc')
             ->limit(5)
+            ->get();
+    }
+
+    // ─── Product Recommendation Engine ────────────────────────────────────────
+
+    /**
+     * Products with quantity <= 10 — need restocking
+     */
+    private function getLowStockProducts()
+    {
+        return Product::select('products.id', 'products.name', 'products.price', 'products.quantity', 'products.product_category_id')
+            ->with(['category:id,name'])
+            ->where('products.quantity', '<=', 10)
+            ->where('products.quantity', '>', 0)
+            ->orderBy('products.quantity', 'asc')
+            ->limit(8)
+            ->get();
+    }
+
+    /**
+     * Most ordered products in the last 7 days — suggest featuring/upselling
+     */
+    private function getTrendingProducts()
+    {
+        return Product::select('products.id', 'products.name', 'products.price', 'products.quantity')
+            ->selectRaw('COUNT(order_items.id) as units_sold')
+            ->selectRaw('SUM(order_items.price * order_items.quantity) as week_revenue')
+            ->join('order_items', 'products.id', '=', 'order_items.product_id')
+            ->join('orders', function ($join) {
+                $join->on('order_items.order_id', '=', 'orders.id')
+                     ->where('orders.payment_status', '=', 'paid')
+                     ->where('orders.created_at', '>=', Carbon::now()->subDays(7));
+            })
+            ->groupBy('products.id', 'products.name', 'products.price', 'products.quantity')
+            ->orderBy('units_sold', 'desc')
+            ->limit(6)
+            ->get();
+    }
+
+    /**
+     * Products with no orders in the last 30 days — suggest discounting/promoting
+     */
+    private function getDeadStockProducts()
+    {
+        $recentlySold = DB::table('order_items')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->where('orders.created_at', '>=', Carbon::now()->subDays(30))
+            ->pluck('order_items.product_id');
+
+        return Product::select('products.id', 'products.name', 'products.price', 'products.quantity', 'products.product_category_id')
+            ->with('category:id,name')
+            ->whereNotIn('products.id', $recentlySold)
+            ->where('products.quantity', '>', 0)
+            ->orderBy('products.quantity', 'desc')
+            ->limit(6)
+            ->get();
+    }
+
+    /**
+     * Revenue breakdown per category for the doughnut chart
+     */
+    private function getCategoryRevenue()
+    {
+        return DB::table('product_categories')
+            ->select(
+                'product_categories.name as category',
+                DB::raw('COALESCE(SUM(order_items.price * order_items.quantity), 0) as revenue'),
+                DB::raw('COUNT(DISTINCT order_items.product_id) as product_count')
+            )
+            ->leftJoin('products', 'products.product_category_id', '=', 'product_categories.id')
+            ->leftJoin('order_items', 'order_items.product_id', '=', 'products.id')
+            ->leftJoin('orders', function ($join) {
+                $join->on('order_items.order_id', '=', 'orders.id')
+                     ->where('orders.payment_status', '=', 'paid');
+            })
+            ->groupBy('product_categories.id', 'product_categories.name')
+            ->orderBy('revenue', 'desc')
+            ->limit(8)
             ->get();
     }
 }

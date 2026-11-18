@@ -33,7 +33,7 @@
                         {{ ucfirst($notification->type ?? 'general') }}
                     </span>
                     @if($notification->read_at)
-                        <span class="badge bg-light text-secondary border ms-1">Read at {{ $notification->read_at }}</span>
+                        <span class="badge bg-light text-secondary border ms-1">Read at {{ $notification->read_at->format('M d, Y h:i A') }}</span>
                     @else
                         <span class="badge bg-warning text-dark ms-1">Unread</span>
                     @endif
@@ -43,11 +43,39 @@
                     <p class="mb-0 fs-6">{{ $notification->message }}</p>
                 </div>
 
-                @if(!empty($notification->data))
-                    <div class="mb-3">
-                        <h6 class="fw-bold">Payload Data:</h6>
-                        <pre class="bg-dark text-white p-3 rounded" style="max-height: 250px;"><code>{{ is_array($notification->data) ? json_encode($notification->data, JSON_PRETTY_PRINT) : $notification->data }}</code></pre>
-                    </div>
+                @php
+                    $payload = !empty($notification->data)
+                        ? (is_array($notification->data)
+                            ? $notification->data
+                            : json_decode($notification->data, true))
+                        : null;
+                @endphp
+                @if(!empty($payload) && is_array($payload))
+                <div class="mb-3">
+                    <h6 class="fw-bold">Additional Details</h6>
+                    <table class="table table-sm table-bordered table-striped w-auto mb-0">
+                        <tbody>
+                            @foreach($payload as $key => $value)
+                            <tr>
+                                <th class="text-muted bg-light" style="min-width:150px; white-space:nowrap;">
+                                    {{ ucwords(str_replace('_', ' ', $key)) }}
+                                </th>
+                                <td>
+                                    @if(is_array($value))
+                                        <ul class="mb-0 ps-3">
+                                            @foreach($value as $k => $v)
+                                                <li>@if(!is_int($k))<strong>{{ ucwords(str_replace('_',' ',$k)) }}:</strong> @endif{{ $v }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        {{ $value }}
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
                 @endif
             </div>
         </div>

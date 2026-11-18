@@ -564,7 +564,357 @@
                     </div>
                 </div>
 
+                {{-- ═══════════════════════════════════════════════════════
+                     PRODUCT RECOMMENDATION ENGINE
+                     ═══════════════════════════════════════════════════════ --}}
+                <div class="row mt-4 mb-2">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 fw-bold"><i class="bx bx-brain me-2 text-primary"></i>Product Recommendation Engine</h5>
+                            <span class="badge bg-primary ms-2">AI Insights</span>
+                        </div>
+                        <p class="text-muted small mt-1 mb-0">Data-driven actions to maximize revenue and inventory health</p>
+                        <hr>
+                    </div>
+                </div>
+
+                {{-- Row 1: KPI summary cards --}}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 mb-4">
+                    <div class="col">
+                        <div class="card radius-10 border-start border-danger border-4">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="bg-danger bg-opacity-10 rounded p-3">
+                                    <i class="bx bx-error-circle fs-2 text-danger"></i>
+                                </div>
+                                <div>
+                                    <div class="fs-4 fw-bold text-danger">{{ $lowStockProducts->count() }}</div>
+                                    <div class="text-muted small">Low Stock Products</div>
+                                    <div class="text-danger small fw-semibold">Need Restocking</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card radius-10 border-start border-success border-4">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="bg-success bg-opacity-10 rounded p-3">
+                                    <i class="bx bx-trending-up fs-2 text-success"></i>
+                                </div>
+                                <div>
+                                    <div class="fs-4 fw-bold text-success">{{ $trendingProducts->count() }}</div>
+                                    <div class="text-muted small">Trending (7 days)</div>
+                                    <div class="text-success small fw-semibold">Promote These</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card radius-10 border-start border-warning border-4">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="bg-warning bg-opacity-10 rounded p-3">
+                                    <i class="bx bx-archive fs-2 text-warning"></i>
+                                </div>
+                                <div>
+                                    <div class="fs-4 fw-bold text-warning">{{ $deadStockProducts->count() }}</div>
+                                    <div class="text-muted small">Dead Stock (30 days)</div>
+                                    <div class="text-warning small fw-semibold">Discount / Bundle</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card radius-10 border-start border-info border-4">
+                            <div class="card-body d-flex align-items-center gap-3">
+                                <div class="bg-info bg-opacity-10 rounded p-3">
+                                    <i class="bx bx-category fs-2 text-info"></i>
+                                </div>
+                                <div>
+                                    <div class="fs-4 fw-bold text-info">{{ $categoryRevenue->count() }}</div>
+                                    <div class="text-muted small">Active Categories</div>
+                                    <div class="text-info small fw-semibold">Revenue Tracked</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Row 2: Trending + Dead Stock --}}
+                <div class="row mb-4">
+                    {{-- Trending Products --}}
+                    <div class="col-12 col-xl-6 mb-4 mb-xl-0">
+                        <div class="card radius-10 h-100">
+                            <div class="card-header bg-transparent border-bottom d-flex align-items-center">
+                                <i class="bx bx-trending-up text-success me-2 fs-5"></i>
+                                <h6 class="mb-0 fw-bold">🔥 Trending Products <small class="text-muted fw-normal">(Last 7 days)</small></h6>
+                                <span class="badge bg-success ms-auto">Promote</span>
+                            </div>
+                            <div class="card-body p-0">
+                                @forelse($trendingProducts as $product)
+                                <div class="d-flex align-items-center px-3 py-2 border-bottom">
+                                    <div class="bg-success bg-opacity-10 rounded p-2 me-3">
+                                        <i class="bx bx-package text-success"></i>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <div class="fw-semibold text-truncate" style="max-width:200px;">{{ $product->name }}</div>
+                                        <div class="text-muted small">${{ number_format($product->price, 2) }} &bull; {{ number_format($product->quantity) }} in stock</div>
+                                    </div>
+                                    <div class="text-end ms-2">
+                                        <div class="fw-bold text-success">{{ $product->units_sold }} sold</div>
+                                        <div class="small text-muted">${{ number_format($product->week_revenue, 0) }}</div>
+                                    </div>
+                                    <div class="ms-2">
+                                        <span class="badge bg-success bg-opacity-10 text-success px-2">Hot</span>
+                                    </div>
+                                </div>
+                                @empty
+                                <div class="text-center py-5 text-muted">
+                                    <i class="bx bx-bar-chart-alt-2 fs-1 d-block mb-2"></i>
+                                    No trending products in the last 7 days
+                                </div>
+                                @endforelse
+                            </div>
+                            @if($trendingProducts->count())
+                            <div class="card-footer bg-transparent text-center">
+                                <a href="{{ route('admin.products.index') }}" class="btn btn-sm btn-outline-success">View All Products</a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Dead Stock --}}
+                    <div class="col-12 col-xl-6">
+                        <div class="card radius-10 h-100">
+                            <div class="card-header bg-transparent border-bottom d-flex align-items-center">
+                                <i class="bx bx-archive text-warning me-2 fs-5"></i>
+                                <h6 class="mb-0 fw-bold">📦 Dead Stock <small class="text-muted fw-normal">(0 orders in 30 days)</small></h6>
+                                <span class="badge bg-warning text-dark ms-auto">Action Needed</span>
+                            </div>
+                            <div class="card-body p-0">
+                                @forelse($deadStockProducts as $product)
+                                <div class="d-flex align-items-center px-3 py-2 border-bottom">
+                                    <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
+                                        <i class="bx bx-box text-warning"></i>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <div class="fw-semibold text-truncate" style="max-width:200px;">{{ $product->name }}</div>
+                                        <div class="text-muted small">
+                                            ${{ number_format($product->price, 2) }}
+                                            @if($product->category)
+                                             &bull; {{ $product->category->name }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="text-end ms-2">
+                                        <div class="fw-bold text-warning">{{ number_format($product->quantity) }}</div>
+                                        <div class="small text-muted">units idle</div>
+                                    </div>
+                                    <div class="ms-2 d-flex flex-column gap-1">
+                                        <span class="badge bg-warning bg-opacity-10 text-warning px-2 small">Discount</span>
+                                    </div>
+                                </div>
+                                @empty
+                                <div class="text-center py-5 text-muted">
+                                    <i class="bx bx-check-circle fs-1 d-block mb-2 text-success"></i>
+                                    All products sold in the last 30 days!
+                                </div>
+                                @endforelse
+                            </div>
+                            @if($deadStockProducts->count())
+                            <div class="card-footer bg-transparent text-center">
+                                <small class="text-muted">💡 Tip: Apply a discount or bundle these products to clear inventory</small>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Row 3: Low Stock Alerts + Category Revenue Chart --}}
+                <div class="row mb-4">
+                    {{-- Low Stock Alerts --}}
+                    <div class="col-12 col-xl-6 mb-4 mb-xl-0">
+                        <div class="card radius-10 h-100">
+                            <div class="card-header bg-transparent border-bottom d-flex align-items-center">
+                                <i class="bx bx-error-circle text-danger me-2 fs-5"></i>
+                                <h6 class="mb-0 fw-bold">⚠️ Low Stock Alerts <small class="text-muted fw-normal">(≤10 units)</small></h6>
+                                <span class="badge bg-danger ms-auto">Urgent</span>
+                            </div>
+                            <div class="card-body p-0">
+                                @forelse($lowStockProducts as $product)
+                                @php
+                                    $stockPct = $product->quantity <= 3 ? 'danger' : ($product->quantity <= 7 ? 'warning' : 'info');
+                                @endphp
+                                <div class="d-flex align-items-center px-3 py-2 border-bottom">
+                                    <div class="bg-{{ $stockPct }} bg-opacity-10 rounded p-2 me-3">
+                                        <i class="bx bx-package text-{{ $stockPct }}"></i>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <div class="fw-semibold text-truncate" style="max-width:200px;">{{ $product->name }}</div>
+                                        <div class="mt-1" style="max-width:160px;">
+                                            <div class="progress" style="height:4px;">
+                                                <div class="progress-bar bg-{{ $stockPct }}" style="width: {{ min($product->quantity * 10, 100) }}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-end ms-3">
+                                        <span class="badge bg-{{ $stockPct }} fs-6">{{ $product->quantity }}</span>
+                                        <div class="small text-muted mt-1">left</div>
+                                    </div>
+                                </div>
+                                @empty
+                                <div class="text-center py-5 text-muted">
+                                    <i class="bx bx-check-shield fs-1 d-block mb-2 text-success"></i>
+                                    All products are well stocked!
+                                </div>
+                                @endforelse
+                            </div>
+                            @if($lowStockProducts->count())
+                            <div class="card-footer bg-transparent text-center">
+                                <a href="{{ route('admin.products.index') }}" class="btn btn-sm btn-outline-danger">Manage Inventory</a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Category Revenue Doughnut --}}
+                    <div class="col-12 col-xl-6">
+                        <div class="card radius-10 h-100">
+                            <div class="card-header bg-transparent border-bottom d-flex align-items-center">
+                                <i class="bx bx-pie-chart text-info me-2 fs-5"></i>
+                                <h6 class="mb-0 fw-bold">📊 Category Revenue Breakdown</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12 col-md-6 d-flex align-items-center justify-content-center">
+                                        <canvas id="categoryRevenueChart" width="220" height="220"></canvas>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        @php
+                                            $catColors = ['#4e73df','#1cc88a','#36b9cc','#f6c23e','#e74a3b','#858796','#5a5c69','#2e59d9'];
+                                            $totalCatRev = $categoryRevenue->sum('revenue');
+                                        @endphp
+                                        @forelse($categoryRevenue as $i => $cat)
+                                        @php $pct = $totalCatRev > 0 ? round(($cat->revenue / $totalCatRev) * 100, 1) : 0; @endphp
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="me-2 rounded-circle d-inline-block" style="width:12px;height:12px;background:{{ $catColors[$i % count($catColors)] }};flex-shrink:0;"></span>
+                                            <div class="flex-grow-1 overflow-hidden">
+                                                <div class="text-truncate small fw-semibold" style="max-width:120px;">{{ $cat->category }}</div>
+                                                <div class="text-muted" style="font-size:11px;">${{ number_format($cat->revenue, 0) }} &bull; {{ $cat->product_count }} products</div>
+                                            </div>
+                                            <span class="badge bg-light text-dark ms-1">{{ $pct }}%</span>
+                                        </div>
+                                        @empty
+                                        <p class="text-muted small">No revenue data yet.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Recommendation Action Cards --}}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card radius-10 bg-gradient-deepblue text-white">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3"><i class="bx bx-bulb me-2"></i>Smart Recommendations</h6>
+                                <div class="row row-cols-1 row-cols-md-3 g-3">
+                                    @if($lowStockProducts->count() > 0)
+                                    <div class="col">
+                                        <div class="bg-white bg-opacity-10 rounded p-3 h-100">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="bx bx-refresh fs-4 me-2"></i>
+                                                <strong>Restock Now</strong>
+                                            </div>
+                                            <p class="mb-2 small opacity-75">{{ $lowStockProducts->count() }} products are running low. Reorder before they sell out.</p>
+                                            <div class="small opacity-75">
+                                                @foreach($lowStockProducts->take(3) as $p)
+                                                <div>• {{ Str::limit($p->name, 30) }} ({{ $p->quantity }} left)</div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+                                    @if($trendingProducts->count() > 0)
+                                    <div class="col">
+                                        <div class="bg-white bg-opacity-10 rounded p-3 h-100">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="bx bx-broadcast fs-4 me-2"></i>
+                                                <strong>Feature in Promotions</strong>
+                                            </div>
+                                            <p class="mb-2 small opacity-75">These products are selling fast. Add them to sliders or homepage sections.</p>
+                                            <div class="small opacity-75">
+                                                @foreach($trendingProducts->take(3) as $p)
+                                                <div>• {{ Str::limit($p->name, 30) }} ({{ $p->units_sold }} sold this week)</div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+                                    @if($deadStockProducts->count() > 0)
+                                    <div class="col">
+                                        <div class="bg-white bg-opacity-10 rounded p-3 h-100">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <i class="bx bx-purchase-tag fs-4 me-2"></i>
+                                                <strong>Clear Dead Stock</strong>
+                                            </div>
+                                            <p class="mb-2 small opacity-75">{{ $deadStockProducts->count() }} products haven't sold in 30 days. Try a discount or bundle deal.</p>
+                                            <div class="small opacity-75">
+                                                @foreach($deadStockProducts->take(3) as $p)
+                                                <div>• {{ Str::limit($p->name, 30) }} ({{ $p->quantity }} idle)</div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
+
+@push('scripts')
+<script>
+(function() {
+    // Category Revenue Doughnut Chart
+    var catCtx = document.getElementById('categoryRevenueChart');
+    if (!catCtx) return;
+
+    var catData = @json($categoryRevenue->pluck('revenue'));
+    var catLabels = @json($categoryRevenue->pluck('category'));
+    var catColors = ['#4e73df','#1cc88a','#36b9cc','#f6c23e','#e74a3b','#858796','#5a5c69','#2e59d9'];
+
+    new Chart(catCtx, {
+        type: 'doughnut',
+        data: {
+            labels: catLabels,
+            datasets: [{
+                data: catData,
+                backgroundColor: catColors.slice(0, catLabels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: false,
+            cutout: '65%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' $' + Number(ctx.raw).toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+})();
+</script>
+@endpush
 @endsection
