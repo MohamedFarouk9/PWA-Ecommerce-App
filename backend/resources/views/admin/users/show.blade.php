@@ -38,10 +38,30 @@
                             class="rounded-circle mb-3" width="100" height="100" style="object-fit:cover; border:3px solid #dee2e6;">
                         <h5 class="fw-bold mb-1">{{ $user->name }}</h5>
                         <p class="text-muted mb-2">{{ $user->email }}</p>
-                        @if($user->role === 'admin')
-                            <span class="badge bg-danger mb-3">Administrator</span>
-                        @else
-                            <span class="badge bg-primary mb-3">Customer</span>
+                        <div class="mb-3 d-flex justify-content-center gap-1">
+                            @if($user->role === 'admin')
+                                <span class="badge bg-danger">Administrator</span>
+                            @else
+                                <span class="badge bg-primary">Customer</span>
+                            @endif
+
+                            @if($user->status === 'banned')
+                                <span class="badge bg-danger">Banned</span>
+                            @elseif($user->status === 'inactive')
+                                <span class="badge bg-secondary">Inactive</span>
+                            @else
+                                <span class="badge bg-success">Active</span>
+                            @endif
+                        </div>
+
+                        @if($user->id !== auth()->id())
+                            <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="mb-3">
+                                @csrf
+                                <button type="submit" class="btn btn-sm {{ $user->status === 'banned' ? 'btn-success' : 'btn-outline-warning' }}">
+                                    <i class="bx {{ $user->status === 'banned' ? 'bx-check-circle' : 'bx-block' }} me-1"></i>
+                                    {{ $user->status === 'banned' ? 'Activate Account' : 'Ban Account' }}
+                                </button>
+                            </form>
                         @endif
 
                         <hr>

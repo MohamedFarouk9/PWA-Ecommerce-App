@@ -6,7 +6,12 @@
     <div class="page-content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>Order Details</h4>
-            <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Back to Orders</a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.orders.invoice', $order->id) }}" target="_blank" class="btn btn-primary">
+                    <i class="bx bx-receipt me-1"></i> View / Print Invoice
+                </a>
+                <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">Back to Orders</a>
+            </div>
         </div>
 
         @include('admin.components.flash-messages')

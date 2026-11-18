@@ -13,7 +13,7 @@
             </div>
             <div class="card">
                 <div class="card-body">
-                <form method="POST" action="{{ route('admin.permissions.store') }}">
+                <form class="ajax-form" method="POST" action="{{ route('admin.permissions.store') }}" data-redirect="{{ route('admin.permissions.index') }}">
                     @csrf
                     <div class="mb-3">
                         <label class="form-label">Name</label>

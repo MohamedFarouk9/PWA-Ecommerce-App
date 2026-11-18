@@ -122,6 +122,9 @@
                                         <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-sm btn-info" title="View Details">
                                             <i class="bx bx-show"></i>
                                         </a>
+                                        <a href="{{ route('admin.orders.invoice', $order->id) }}" target="_blank" class="btn btn-sm btn-secondary" title="Invoice">
+                                            <i class="bx bx-receipt"></i>
+                                        </a>
                                         <a href="{{ route('admin.orders.tracking', $order->id) }}" class="btn btn-sm btn-primary" title="Track Order">
                                             <i class="bx bx-map"></i>
                                         </a>

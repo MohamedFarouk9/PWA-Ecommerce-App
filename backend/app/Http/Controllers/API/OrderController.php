@@ -5,9 +5,12 @@ namespace App\Http\Controllers\API;
 use App\Events\Notifications\OrderCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
+use App\Models\Coupon;
+use App\Models\CouponUsage;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -81,6 +84,23 @@ class OrderController extends Controller
     }
 
     /**
+     * Get printable invoice for the order
+     */
+    public function invoice($id)
+    {
+        $userId = $this->userId();
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $order = Order::where('user_id', $userId)
+            ->with(['items.product.category', 'user'])
+            ->findOrFail($id);
+
+        return view('admin.orders.invoice', compact('order'));
+    }
+
+    /**
      * Checkout and create order from current cart with pessimistic concurrency locking
      */
     public function store(Request $request)
@@ -95,6 +115,7 @@ class OrderController extends Controller
             'billing_address' => 'nullable|string|max:500',
             'payment_method' => 'required|string|in:stripe,paymob,myfatoorah',
             'notes' => 'nullable|string|max:500',
+            'coupon_code' => 'nullable|string|max:50',
         ]);
 
         $sessionId = $this->sessionId($request);
@@ -158,6 +179,25 @@ class OrderController extends Controller
             $billingAddress = strip_tags($validated['billing_address'] ?? $validated['shipping_address']);
             $notes = isset($validated['notes']) ? strip_tags($validated['notes']) : null;
 
+            // Handle coupon validation & discount calculation
+            $discountAmount = 0.00;
+            $appliedCoupon = null;
+
+            if (!empty($validated['coupon_code'])) {
+                $code = strtoupper(trim($validated['coupon_code']));
+                $coupon = Coupon::where('code', $code)->lockForUpdate()->first();
+                $user = User::find($userId);
+
+                if ($coupon) {
+                    $validation = $coupon->validateFor($user, $totalAmount);
+                    if ($validation['valid']) {
+                        $discountAmount = (float) $validation['discount_amount'];
+                        $totalAmount = max(0, $totalAmount - $discountAmount);
+                        $appliedCoupon = $coupon;
+                    }
+                }
+            }
+
             // 3. Create Order
             $order = Order::create([
                 'user_id' => $userId,
@@ -165,11 +205,24 @@ class OrderController extends Controller
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
                 'total_amount' => $totalAmount,
+                'coupon_code' => $appliedCoupon ? $appliedCoupon->code : null,
+                'discount_amount' => $discountAmount,
                 'payment_method' => $validated['payment_method'],
                 'shipping_address' => $shippingAddress,
                 'billing_address' => $billingAddress,
                 'notes' => $notes,
             ]);
+
+            // Track coupon usage
+            if ($appliedCoupon) {
+                $appliedCoupon->increment('used_count');
+                CouponUsage::create([
+                    'coupon_id' => $appliedCoupon->id,
+                    'user_id' => $userId,
+                    'order_id' => $order->id,
+                    'discount_amount' => $discountAmount,
+                ]);
+            }
 
             // 4. Insert Order Items
             foreach ($orderItemsData as &$data) {

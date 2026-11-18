@@ -85,6 +85,30 @@
 					</a>
 				</li>
 
+				<!-- Reviews -->
+				<li>
+					<a href="{{ route('admin.reviews.index') }}">
+						<div class="parent-icon"><i class='bx bx-star'></i></div>
+						<div class="menu-title">Product Reviews</div>
+					</a>
+				</li>
+
+				<!-- Support / Contact Messages -->
+				<li>
+					<a href="{{ route('admin.contacts.index') }}">
+						<div class="parent-icon"><i class='bx bx-envelope'></i></div>
+						<div class="menu-title">Contact Messages</div>
+					</a>
+				</li>
+
+				<!-- Coupons & Discounts -->
+				<li>
+					<a href="{{ route('admin.coupons.index') }}">
+						<div class="parent-icon"><i class='bx bx-purchase-tag-alt'></i></div>
+						<div class="menu-title">Coupons & Discounts</div>
+					</a>
+				</li>
+
 				<!-- ADMIN & SYSTEM SETTINGS -->
 				<li class="menu-label">System Settings</li>
 

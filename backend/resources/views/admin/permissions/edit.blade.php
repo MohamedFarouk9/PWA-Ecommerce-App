@@ -13,7 +13,7 @@
             </div>
             <div class="card">
                 <div class="card-body">
-                <form method="POST" action="{{ route('admin.permissions.update', $permission) }}">
+                <form class="ajax-form" method="POST" action="{{ route('admin.permissions.update', $permission) }}" data-redirect="{{ route('admin.permissions.index') }}">
                     @csrf
                     @method('PATCH')
                     <div class="mb-3">

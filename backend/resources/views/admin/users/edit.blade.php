@@ -41,7 +41,7 @@
                             <div class="text-muted small mt-1">{{ $user->name }}</div>
                         </div>
 
-                        <form method="POST" action="{{ route('admin.users.update', $user->id) }}">
+                        <form class="ajax-form" method="POST" action="{{ route('admin.users.update', $user->id) }}" data-redirect="{{ route('admin.users.index') }}">
                             @csrf
                             @method('PATCH')
 

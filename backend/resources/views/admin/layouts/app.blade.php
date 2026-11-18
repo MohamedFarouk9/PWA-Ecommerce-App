@@ -58,6 +58,9 @@
     <!-- App JS -->
     <script src="{{ asset('admin/assets/js/app.js') }}"></script>
 
+    @include('admin.components.ajax-form-handler')
+    @include('admin.components.ajax-delete-file-handler')
+
     @stack('scripts')
 </body>
 

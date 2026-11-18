@@ -18,7 +18,7 @@
                         <h5 class="mb-0">Order #{{ $order->order_number }}</h5>
                     </div>
                     <div class="card-body">
-                        <form action="{{ route('admin.orders.update', $order->id) }}" method="POST">
+                        <form class="ajax-form" action="{{ route('admin.orders.update', $order->id) }}" method="POST" data-redirect="{{ route('admin.orders.show', $order->id) }}">
                             @csrf
                             @method('PATCH')
 

@@ -18,7 +18,7 @@
                         <h5 class="mb-0">New Order</h5>
                     </div>
                     <div class="card-body">
-                        <form action="{{ route('admin.orders.store') }}" method="POST">
+                        <form class="ajax-form" action="{{ route('admin.orders.store') }}" method="POST" data-redirect="{{ route('admin.orders.index') }}">
                             @csrf
 
                             <div class="row mb-3">

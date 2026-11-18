@@ -1,58 +1,86 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
-    $('.ajax-form').on('submit', function(e) {
+    $(document).off('submit', '.ajax-form').on('submit', '.ajax-form', function(e) {
         e.preventDefault();
         var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        var originalBtnHtml = submitBtn.html();
         var isMultipart = form.attr('enctype') === 'multipart/form-data';
+
+        // Clear previous field errors
+        form.find('.is-invalid').removeClass('is-invalid');
+        form.find('.invalid-feedback.ajax-error').remove();
+
+        // Disable button during request
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Processing...');
+
         var ajaxOptions = {
             url: form.attr('action'),
             type: form.attr('method') || 'POST',
             headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}'
             },
             success: function(response) {
+                var message = response.message || 'Operation completed successfully!';
                 Swal.fire({
                     icon: 'success',
                     title: 'Success',
-                    text: response.message || 'Operation successful!',
-                    confirmButtonColor: '#3085d6',
+                    text: message,
+                    confirmButtonColor: '#6f42c1',
+                    confirmButtonText: 'OK',
+                    timer: 2000,
+                    timerProgressBar: true
                 }).then(function() {
-                    // General redirect logic
                     var redirectUrl = response.redirect || form.data('redirect');
                     if (redirectUrl) {
                         window.location.href = redirectUrl;
                     } else {
-                        // Optionally reload page if no redirect specified
                         location.reload();
                     }
                 });
-                form[0].reset();
             },
             error: function(xhr) {
-                let msg = 'An error occurred.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
+                submitBtn.prop('disabled', false).html(originalBtnHtml);
+
+                var title = 'Error';
+                var msg = 'An error occurred.';
+
+                if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                    var errorList = [];
+                    $.each(xhr.responseJSON.errors, function(field, messages) {
+                        errorList.push(messages.join(' '));
+                        var input = form.find('[name="' + field + '"], [name="' + field + '[]"]');
+                        if (input.length) {
+                            input.addClass('is-invalid');
+                            input.after('<div class="invalid-feedback ajax-error d-block">' + messages[0] + '</div>');
+                        }
+                    });
+                    msg = errorList.join('\n');
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
                     msg = xhr.responseJSON.message;
                 }
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    msg += '\n' + Object.values(xhr.responseJSON.errors).join('\n');
-                }
+
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
+                    title: title,
                     text: msg,
-                    confirmButtonColor: '#d33',
+                    confirmButtonColor: '#6f42c1',
+                    confirmButtonText: 'OK'
                 });
             }
         };
+
         if (isMultipart) {
-            var formData = new FormData(form[0]);
-            ajaxOptions.data = formData;
+            ajaxOptions.data = new FormData(form[0]);
             ajaxOptions.processData = false;
             ajaxOptions.contentType = false;
         } else {
             ajaxOptions.data = form.serialize();
         }
+
         $.ajax(ajaxOptions);
     });
 });
