@@ -19,7 +19,7 @@ const NavMenuDesktop = () => {
   );
   const [searchKey, setSearchKey] = useState(""); // State for search input
   const navigate = useNavigate(); // Hook for navigation
-  const {token , logout } = useContext(AuthContext);
+  const { token, user, logout } = useContext(AuthContext);
   const { cart } = useContext(CartContext) || {};
 
   const wishlistCount = (() => {
@@ -113,6 +113,11 @@ const NavMenuDesktop = () => {
            
               {token ? (
                 <>
+                    {user?.role === 'admin' && (
+                      <button className="h4 btn text-warning fw-bold" onClick={()=> navigate("/admin/dashboard")}>
+                        Dashboard
+                      </button>
+                    )}
                     <button className="h4 btn" onClick={()=> navigate("/orders")}>
                       Orders
                     </button>

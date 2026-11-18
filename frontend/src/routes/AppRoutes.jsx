@@ -18,12 +18,14 @@ import OrdersPage from "../pages/OrdersPage";
 import Favourite from "../components/common/Favourite";
 import Category from "../components/categories/Category";
 import SubCategory from '../components/categories/SubCategory';
+import AdminDashboardPage from "../pages/AdminDashboardPage";
 
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/content/:type" element={<ContentPageWrapper />} />
       <Route path="/product-details/:productId" element={<ProductDetailsPage />} />

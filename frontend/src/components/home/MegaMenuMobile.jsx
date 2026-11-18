@@ -1,33 +1,13 @@
-import React, { useEffect, useState } from "react";
-import AppURL from "../../utils/AppURL";
-import axios from "axios";
+import React from "react";
 import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 import { Link } from "react-router-dom";
+import useCategories from "../../hooks/useCategories";
 
-const MegaMenuMobile = () => {
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+const MegaMenuMobile = ({ categories: propCategories }) => {
+  const { data: hookCategories, loading, error } = useCategories('all');
+  const categories = propCategories || hookCategories || [];
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(AppURL.CategoryDetails);
-        if (response.status === 200) {
-          setCategories(response.data.data.categories);
-        }
-      } catch (error) {
-        setError("Failed to load categories in Mega Menu");
-        console.error("Error fetching categories:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []); // Empty dependency array to run only on mount and unmount
-
-  // Define the event handler function separately
   const handleAccordionClick = (event) => {
     event.currentTarget.classList.toggle("active");
     const panel = event.currentTarget.nextElementSibling;
@@ -38,77 +18,50 @@ const MegaMenuMobile = () => {
     }
   };
 
-  useEffect(() => {
-    const acc = document.getElementsByClassName("accordionMobile");
-
-    // Add event listeners
-    for (let i = 0; i < acc.length; i++) {
-      acc[i].addEventListener("click", handleAccordionClick);
-    }
-
-    // Cleanup function to remove event listeners on component unmount
-    return () => {
-      for (let i = 0; i < acc.length; i++) {
-        acc[i].removeEventListener("click", handleAccordionClick);
-      }
-    };
-  }, [categories]); // Add categories as dependency to reattach listeners when data changes
-
-  if (isLoading) {
-    return (
-      <div className="accordionMenuDivMobile">
-        <Skeleton count={5} height={40} />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="accordionMenuDivMobile">
-        <div className="text-danger">{error}</div>
-      </div>
-    );
+  if (!propCategories && loading && categories.length === 0) {
+    return <Skeleton count={6} height={25} className="mb-2" />;
   }
 
   return (
-    <>
-      <div className="accordionMenuDivMobile">
-        {categories.length > 0 ? (
-          categories.map((category) => (
-            <div className="accordionMenuDivInsideMobile" key={category.id}>
-              <button className="accordionMobile">
-                {category.image && (
-                  <img
-                    className="accordionMenuIconMobile"
-                    src="https://img.icons8.com/?size=50&id=53386&format=png"
-                    alt="icon"
-                  />
+    <div className="accordionMenuDivMobile">
+      {error && categories.length === 0 ? (
+        <div className="text-danger">{error}</div>
+      ) : categories.length > 0 ? (
+        categories.map((category, index) => (
+          <div className="accordionMenuDivInsideMobile" key={category.id || index}>
+            <button className="accordionMobile" onClick={handleAccordionClick}>
+              <img
+                className="accordionMenuIconMobile"
+                src={category.image || "https://img.icons8.com/?size=50&id=53386&format=png"}
+                alt="icon"
+                loading="lazy"
+              />
+              &nbsp; {category.name || category.category_name}
+            </button>
+            <div className="panelMobile">
+              <ul>
+                {category.children && category.children.length > 0 ? (
+                  category.children.map((sub, sIdx) => (
+                    <li key={sub.id || sIdx}>
+                      <Link to={`/${category.slug || category.name}/${sub.slug || sub.name}`} className="accordionItem">
+                        {sub.name || sub.category_name}
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  <li>
+                    <Link to={`/${category.slug || category.name}`} className="accordionItem">
+                      {category.name || category.category_name}
+                    </Link>
+                  </li>
                 )}
-                &nbsp {category.name}
-              </button>
-              <div className="panelMobile">
-                <ul>
-                  {category.children &&
-                    category.children.map((subcategory) => (
-                      <li key={subcategory.id}>
-                        <Link
-                          to={`/categories/${subcategory.slug}`}
-                          className="accordionItemMobile"
-                        >
-                          {subcategory.name}
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
-              </div>
+              </ul>
             </div>
-          ))
-        ) : (
-          <div className="text-center">No categories available</div>
-        )}
-      </div>
-    </>
+          </div>
+        ))
+      ) : null}
+    </div>
   );
 };
 
-export default MegaMenuMobile;
+export default React.memo(MegaMenuMobile);

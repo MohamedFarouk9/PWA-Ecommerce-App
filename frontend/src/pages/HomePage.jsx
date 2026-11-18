@@ -52,28 +52,21 @@ const Categories = lazy(() =>
 );
 
 /**
- * HomePage Component - Main landing page with product sections from backend
- * Architecture:
- * - Uses custom hooks (useProducts, useSliders, useCategories) for data fetching
- * - Implements service layer pattern for API calls
- * - Lazy loads components for performance optimization
- * - Proper error handling and loading states
- * - Reusable ProductSection component for dynamic sections
+ * HomePage Component - Optimized landing page with centralized caching & prop-sharing
  */
 const HomePage = () => {
-  // Fetch data using custom hooks
+  // Fetch unified data with React Query caching (prevents duplicate waterfalls)
   const {
     data: sectionsData,
     loading: sectionsLoading,
     error: sectionsError,
   } = useProducts('sections');
-  const { data: categoriesData, loading: categoriesLoading } = useCategories();
+  const { data: categoriesData } = useCategories('all');
   const { data: slidersData } = useSliders('active');
 
-  // Track visitor on mount
+  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Optional: Add visitor tracking here if backend endpoint exists
   }, []);
 
   /**
@@ -82,8 +75,8 @@ const HomePage = () => {
   const renderDesktopLayout = () => (
     <div className="Desktop">
       <Suspense fallback={<PageLoadingFallback />}>
-        <NavMenuDesktop />
-        <HomeTop />
+        <NavMenuDesktop categories={categoriesData} />
+        <HomeTop categories={categoriesData} sliders={slidersData} />
       </Suspense>
     </div>
   );
@@ -94,8 +87,8 @@ const HomePage = () => {
   const renderMobileLayout = () => (
     <div className="Mobile">
       <Suspense fallback={<PageLoadingFallback />}>
-        <NavMenuMobile />
-        <HomeTopMobile />
+        <NavMenuMobile categories={categoriesData} />
+        <HomeTopMobile sliders={slidersData} />
       </Suspense>
     </div>
   );
@@ -105,14 +98,12 @@ const HomePage = () => {
    */
   const renderCategoriesSection = () => (
     <Suspense fallback={null}>
-      <Categories />
+      <Categories categories={categoriesData} />
     </Suspense>
   );
 
   /**
    * Render dynamic product sections from backend
-   * Maps through all sections returned from API and displays them using ProductSection component
-   * Each section contains products grouped by category/section name
    */
   const renderProductSections = () => {
     if (sectionsError) {
@@ -125,7 +116,6 @@ const HomePage = () => {
     }
 
     return Object.entries(sectionsData).map(([sectionName, products]) => {
-      // Ensure products is an array
       const productArray = Array.isArray(products) ? products : [];
       
       return (

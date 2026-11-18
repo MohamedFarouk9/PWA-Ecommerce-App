@@ -7,7 +7,16 @@ import 'react-toastify/dist/ReactToastify.css';
 import AppRoutes from './routes/AppRoutes';
 
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes stale time to avoid redundant re-fetching
+      cacheTime: 15 * 60 * 1000, // 15 minutes in memory cache
+      refetchOnWindowFocus: false, // Prevent jarring refetches on window focus
+      retry: 1,
+    },
+  },
+});
 
 
 function App() {

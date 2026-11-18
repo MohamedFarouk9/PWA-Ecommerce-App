@@ -1,36 +1,14 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import AppURL from "../../utils/AppURL";
+import React from "react";
 import { Container } from "react-bootstrap";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { Link } from "react-router-dom";
+import useCategories from "../../hooks/useCategories";
 
-const MegaMenuDesktop = () => {
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+const MegaMenuDesktop = ({ categories: propCategories }) => {
+  const { data: hookCategories, loading, error } = useCategories('all');
+  const categories = propCategories || hookCategories || [];
 
-  // Fetch category data when the component mounts
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(AppURL.CategoryDetails);
-        if (response.status === 200) {
-          setCategories(response.data.data.categories);
-        }
-      } catch (error) {
-        setError("Failed to load categories in Mega Menu");
-        console.error("Error fetching categories:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []); // Empty dependency array to run only on mount and unmount
-
-  // Define the event handler function separately
   const handleAccordionClick = (event) => {
     event.currentTarget.classList.toggle("active");
     const panel = event.currentTarget.nextElementSibling;
@@ -41,7 +19,7 @@ const MegaMenuDesktop = () => {
     }
   };
 
-  if (isLoading) {
+  if (!propCategories && loading && categories.length === 0) {
     return (
       <Container className="text-center">
         <Skeleton count={8} height={20} />
@@ -50,43 +28,45 @@ const MegaMenuDesktop = () => {
   }
 
   return (
-    <>
-      <div className="accordionMenuDivAll">
-        {error ? (
-          <div className="text-danger">{error}</div>
-        ) : categories.length > 0 ? (
-          categories.map((category, index) => (
-            <div className="accordionMenuDivInsideAll" key={index}>
-              <button className="accordionAll" onClick={handleAccordionClick}>
-                <img
-                  className="accordionMenuIconAll"
-                  src="https://img.icons8.com/?size=50&id=53386&format=png"
-                  alt="icon"
-                />
-                &nbsp; {category.name}
-              </button>
-              <div className="panelAll">
-                <ul>
-                  {category.children && category.children.map((subcategory, subIndex) => (
-                    <li key={subIndex}>
-                      <Link 
-                        to={`/category/${category.slug}/${subcategory.slug}`} 
-                        className="accordionItemAll"
-                      >
-                        {subcategory.name}
+    <div className="accordionMenuDivAll">
+      {error && categories.length === 0 ? (
+        <div className="text-danger">{error}</div>
+      ) : categories.length > 0 ? (
+        categories.map((category, index) => (
+          <div className="accordionMenuDivInsideAll" key={category.id || index}>
+            <button className="accordionAll" onClick={handleAccordionClick}>
+              <img
+                className="accordionMenuIconAll"
+                src={category.image || "https://img.icons8.com/?size=50&id=53386&format=png"}
+                alt="icon"
+                loading="lazy"
+              />
+              &nbsp; {category.name || category.category_name}
+            </button>
+            <div className="panelAll">
+              <ul>
+                {category.children && category.children.length > 0 ? (
+                  category.children.map((sub, sIdx) => (
+                    <li key={sub.id || sIdx}>
+                      <Link to={`/${category.slug || category.name}/${sub.slug || sub.name}`} className="accordionItem">
+                        {sub.name || sub.category_name}
                       </Link>
                     </li>
-                  ))}
-                </ul>
-              </div>
+                  ))
+                ) : (
+                  <li>
+                    <Link to={`/${category.slug || category.name}`} className="accordionItem">
+                      {category.name || category.category_name}
+                    </Link>
+                  </li>
+                )}
+              </ul>
             </div>
-          ))
-        ) : (
-          <div>No categories available.</div>
-        )}
-      </div>
-    </>
+          </div>
+        ))
+      ) : null}
+    </div>
   );
 };
 
-export default MegaMenuDesktop;
+export default React.memo(MegaMenuDesktop);
