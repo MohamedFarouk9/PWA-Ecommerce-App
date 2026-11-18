@@ -57,6 +57,21 @@ services:
     volumes:
       - meilisearch_data:/data.ms
 
+  # Elasticsearch Search Engine Service
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: ecommerce_elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
   # Laravel Backend API Service
   backend:
     build:
@@ -85,6 +100,7 @@ services:
       RABBITMQ_PASSWORD: guest
       MEILISEARCH_HOST: http://meilisearch:7700
       MEILISEARCH_KEY: masterKey123
+      ELASTICSEARCH_HOST: http://elasticsearch:9200
     depends_on:
       mysql:
         condition: service_healthy
@@ -93,6 +109,8 @@ services:
       redis:
         condition: service_started
       meilisearch:
+        condition: service_started
+      elasticsearch:
         condition: service_started
 
   # React PWA Frontend Service
@@ -115,3 +133,4 @@ volumes:
   rabbitmq_data:
   redis_data:
   meilisearch_data:
+  elasticsearch_data:

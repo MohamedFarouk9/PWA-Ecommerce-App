@@ -4,22 +4,47 @@ namespace App\Repositories\Eloquent\API;
 use App\Models\Product;
 use App\Models\Section;
 use App\Repositories\Contracts\API\ApiProductRepositoryInterface;
+use App\Services\Search\ElasticsearchService;
 use Illuminate\Support\Facades\Cache;
 
 class ApiProductRepository implements ApiProductRepositoryInterface
-{ // i need to rewrite the whole file
+{
     protected $model;
+    protected ?ElasticsearchService $elasticsearchService;
 
-    public function __construct(Product $model)
+    public function __construct(Product $model, ?ElasticsearchService $elasticsearchService = null)
     {
         $this->model = $model;
+        $this->elasticsearchService = $elasticsearchService;
     }
 
     /**
-     * Search products by title or brand
+     * Search products by title, description or category with Elasticsearch (falls back to MySQL)
      */
     public function search($query, $limit = 20)
     {
+        // 1. Attempt Elasticsearch full-text fuzzy search if available
+        if ($this->elasticsearchService) {
+            $esResult = $this->elasticsearchService->search((string) $query, [], $limit);
+
+            if ($esResult !== null) {
+                $ids = $esResult['ids'] ?? [];
+
+                if (empty($ids)) {
+                    return collect([]);
+                }
+
+                $products = $this->model->with(['category', 'tags', 'productVariants.productAttribute', 'images', 'status'])
+                    ->whereIn('id', $ids)
+                    ->get();
+
+                // Preserve Elasticsearch relevance ranking order
+                $idMap = array_flip($ids);
+                return $products->sortBy(fn($p) => $idMap[$p->id] ?? 9999)->values();
+            }
+        }
+
+        // 2. Resilient Database Fallback
         return $this->model->with('status')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
@@ -28,7 +53,7 @@ class ApiProductRepository implements ApiProductRepositoryInterface
             ->whereHas('status', function ($q) {
                 $q->where('name', 'published'); // Only published products
             })
-            ->with(['category', 'tags', 'productVariants.productAttribute']) // Removed 'sections' if not needed
+            ->with(['category', 'tags', 'productVariants.productAttribute', 'images'])
             ->limit($limit)
             ->get();
     }
@@ -115,7 +140,7 @@ class ApiProductRepository implements ApiProductRepositoryInterface
                 $q->whereHas('status', function ($q) {
                     $q->where('name', 'published'); // Only published products
                 })
-                    ->with(['category', 'tags', 'productVariants.productAttribute', 'status'])
+                    ->with(['category', 'tags', 'productVariants.productAttribute', 'status', 'images'])
                     ->limit(8);
             }])->get();
 

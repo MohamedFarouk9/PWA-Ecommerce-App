@@ -151,3 +151,10 @@ Route::get('/health/notifications', function () {
         'failed_in_last_hour' => $failedNotifications,
     ]);
 });
+
+// Admin API endpoints (accessible for dashboard frontend)
+Route::prefix('admin')->group(function () {
+    Route::get('/dashboard/stats', [\App\Http\Controllers\Admin\DashboardController::class, 'stats']);
+    Route::get('/search', [\App\Http\Controllers\Admin\DashboardController::class, 'search']);
+    Route::apiResource('users', \App\Http\Controllers\Admin\UserController::class);
+});
