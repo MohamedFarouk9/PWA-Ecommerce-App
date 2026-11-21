@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Events\Notifications\OrderCreated;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Orders\StoreOrderRequest;
 use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
@@ -103,21 +104,10 @@ class OrderController extends Controller
     /**
      * Checkout and create order from current cart with pessimistic concurrency locking
      */
-    public function store(Request $request)
+    public function store(StoreOrderRequest $request)
     {
         $userId = $this->userId();
-        if (!$userId) {
-            return response()->json(['message' => 'Authentication required for checkout.'], 401);
-        }
-
-        $validated = $request->validate([
-            'shipping_address' => 'required|string|max:500',
-            'billing_address' => 'nullable|string|max:500',
-            'payment_method' => 'required|string|in:stripe,paymob,myfatoorah',
-            'notes' => 'nullable|string|max:500',
-            'coupon_code' => 'nullable|string|max:50',
-        ]);
-
+        $validated = $request->sanitizedFields();
         $sessionId = $this->sessionId($request);
 
         return DB::transaction(function () use ($userId, $sessionId, $validated) {
@@ -137,10 +127,11 @@ class OrderController extends Controller
             }
 
             // 2. Validate current stock and compute prices authoritatively from database
+            // Sort by product_id ascending before locking to prevent MySQL deadlocks
             $totalAmount = 0.00;
             $orderItemsData = [];
 
-            foreach ($cartItems as $item) {
+            foreach ($cartItems->sortBy('product_id') as $item) {
                 // Pessimistically lock product row to prevent TOCTOU race conditions
                 $product = Product::where('id', $item->product_id)->lockForUpdate()->first();
                 if (!$product) {
@@ -160,7 +151,10 @@ class OrderController extends Controller
                     ], 422);
                 }
 
-                $unitPrice = (float) $product->price;
+                // Use effective sale price if active, otherwise regular price
+                $unitPrice = ($product->special_price && (float) $product->special_price > 0 && (float) $product->special_price < (float) $product->price)
+                    ? (float) $product->special_price
+                    : (float) $product->price;
                 $lineTotal = round($unitPrice * $quantity, 2);
                 $totalAmount += $lineTotal;
 
@@ -174,10 +168,9 @@ class OrderController extends Controller
                 ];
             }
 
-            // Sanitize input to prevent Stored XSS
-            $shippingAddress = strip_tags($validated['shipping_address']);
-            $billingAddress = strip_tags($validated['billing_address'] ?? $validated['shipping_address']);
-            $notes = isset($validated['notes']) ? strip_tags($validated['notes']) : null;
+            $shippingAddress = $validated['shipping_address'];
+            $billingAddress = $validated['billing_address'];
+            $notes = $validated['notes'];
 
             // Handle coupon validation & discount calculation
             $discountAmount = 0.00;

@@ -46,4 +46,10 @@ class PaymentService
         $gatewayInstance = $this->factory->create($gateway);
         return $gatewayInstance->handleWebhook($payload);
     }
+
+    public function verifyWebhookSignature(string $gateway, string $rawBody, array $headers): bool
+    {
+        $gatewayInstance = $this->factory->create($gateway);
+        return $gatewayInstance->verifyWebhookSignature($rawBody, $headers);
+    }
 }

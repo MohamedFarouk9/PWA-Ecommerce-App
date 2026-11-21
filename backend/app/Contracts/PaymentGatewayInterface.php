@@ -15,6 +15,11 @@ interface PaymentGatewayInterface
     public function handleWebhook(array $payload): array;
 
     /**
+     * Verify cryptographic webhook signature from gateway headers/body
+     */
+    public function verifyWebhookSignature(string $rawBody, array $headers): bool;
+
+    /**
      * Refund a payment
      */
     public function refund(string $transactionId, float $amount): array;

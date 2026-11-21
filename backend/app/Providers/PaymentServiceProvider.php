@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Payments\OrderSettlementService;
 use App\Services\Payments\PaymentGatewayFactory;
 use App\Services\Payments\PaymentProcessor;
 use App\Services\Payments\PaymentService;
@@ -19,6 +20,11 @@ class PaymentServiceProvider extends ServiceProvider
         // Register processor
         $this->app->singleton(PaymentProcessor::class, function ($app) {
             return new PaymentProcessor($app->make(PaymentGatewayFactory::class));
+        });
+
+        // Register order settlement service
+        $this->app->singleton(OrderSettlementService::class, function () {
+            return new OrderSettlementService();
         });
 
         // Register payment service

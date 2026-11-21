@@ -54,7 +54,7 @@ Route::middleware('auth:api')->group(function () {
 });
 
 // Webhook (Public, signature-verified in gateway)
-Route::post('/payment/webhook', [PaymentController::class, 'handleWebhook']);
+Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
 
 // Contact
 Route::post('/post-contact', [ContactController::class, 'postContact'])->middleware('throttle:5,1');

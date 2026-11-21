@@ -27,6 +27,20 @@ class PaymentResultDTO
         );
     }
 
+    public static function pending(
+        string $transactionId,
+        string $gateway,
+        array $metadata = []
+    ): self {
+        return new self(
+            success: true,
+            transactionId: $transactionId,
+            gateway: $gateway,
+            status: 'pending',
+            metadata: $metadata,
+        );
+    }
+
     public static function failed(
         string $gateway,
         string $errorMessage,

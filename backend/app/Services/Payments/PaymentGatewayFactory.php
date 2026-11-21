@@ -14,7 +14,7 @@ class PaymentGatewayFactory
         // Register available gateways
         $this->register('stripe', StripeGateway::class);
         $this->register('paymob', PaymobGateway::class);
-        // $this->register('myfatoorah', MyFatoorahGateway::class);
+        $this->register('myfatoorah', MyFatoorahGateway::class);
     }
 
     /**

@@ -34,10 +34,19 @@ class IdempotencyHandler
 
         // Found a previous request
         if ($record->status === 'completed') {
+            $respStatus = $record->response['status'] ?? 'completed';
+            if ($respStatus === 'pending') {
+                return PaymentResultDTO::pending(
+                    $record->transaction_id ?? '',
+                    $record->gateway,
+                    $record->response['metadata'] ?? ($record->response ?? [])
+                );
+            }
+
             return PaymentResultDTO::success(
                 $record->transaction_id ?? '',
                 $record->gateway,
-                $record->response ?? []
+                $record->response['metadata'] ?? ($record->response ?? [])
             );
         }
 
@@ -45,7 +54,7 @@ class IdempotencyHandler
             return PaymentResultDTO::failed(
                 $record->gateway,
                 'This payment request previously failed. ' .
-                    ($record->response['error'] ?? 'Unknown error')
+                    ($record->response['error_message'] ?? $record->response['error'] ?? 'Unknown error')
             );
         }
 
@@ -69,7 +78,7 @@ class IdempotencyHandler
         array $requestData,
         string $status = 'pending'
     ): IdempotentTransaction {
-        return idempotentTransaction::create([
+        return IdempotentTransaction::create([
             'idempotency_key' => $idempotencyKey,
             'gateway' => $gateway,
             'order_id' => $orderId,
@@ -108,14 +117,15 @@ class IdempotencyHandler
 
     /**
      * Hash request data for integrity check (deterministic sha256)
+     * Supports both snake_case arrays and camelCase DTO casts.
      */
     private function hashRequest(array $data): string
     {
         $normalized = [
-            'amount' => (string) ($data['amount'] ?? 0),
+            'amount' => number_format((float) ($data['amount'] ?? 0), 2, '.', ''),
             'currency' => strtoupper((string) ($data['currency'] ?? 'USD')),
-            'order_id' => (string) ($data['order_id'] ?? ''),
-            'customer_id' => (string) ($data['customer_id'] ?? ''),
+            'order_id' => (string) ($data['order_id'] ?? $data['orderId'] ?? ''),
+            'customer_id' => (string) ($data['customer_id'] ?? $data['customerId'] ?? ''),
         ];
 
         return hash('sha256', json_encode($normalized));
