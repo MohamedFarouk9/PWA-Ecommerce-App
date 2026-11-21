@@ -6,7 +6,7 @@ import NavMenuMobile from "../components/common/NavMenuMoblie";
 import Profile from "../components/common/Profile";
 import { AuthContext } from "../utils/AuthContext";
 import { Container } from "react-bootstrap";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 const ProfilePage = () => {
   const { user, loading, logout } = useContext(AuthContext);

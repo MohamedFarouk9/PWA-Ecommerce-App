@@ -8,7 +8,7 @@ import Login from "../../assets/images/login.png";
 import axios from "axios";
 import AppURL from "../../utils/AppURL";
 import ToastMessages from "../../toast-messages/toast";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../utils/AuthContext";
 import { ResponsiveLayout } from "../../layouts/ResponsiveLayout";
 

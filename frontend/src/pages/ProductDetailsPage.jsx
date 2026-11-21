@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import EnhancedProductDetails from "../components/ProductDetails/EnhancedProductDetails";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import AppURL from "../utils/AppURL";
 import ToastMessages from "../toast-messages/toast";
 import { ResponsiveLayout } from "../layouts/ResponsiveLayout";

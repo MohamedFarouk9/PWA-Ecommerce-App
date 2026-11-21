@@ -4,7 +4,7 @@ import Forget from "../../assets/images/forget.jpg";
 import ToastMessages from "../../toast-messages/toast";
 import axios from "axios";
 import AppURL from "../../utils/AppURL";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import { ResponsiveLayout } from "../../layouts/ResponsiveLayout";
 
 const ResetPassword = () => {

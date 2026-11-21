@@ -23,7 +23,8 @@ const Category = () => {
         if(response.data.message){
           setMessage(response.data.message);
         }
-        setProductData(response.data.products || []);
+        const items = response.data?.data || response.data?.products?.data || response.data?.products || [];
+        setProductData(Array.isArray(items) ? items : []);
       } catch (error) {
         setError(
           ToastMessages.showError("Failed to load products Information.")

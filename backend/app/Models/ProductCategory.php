@@ -29,12 +29,47 @@ class ProductCategory extends Model
 
     public function getImageAttribute()
     {
-        if (isset($this->attributes['image']) && File::exists(public_path('storage/images/categories/' . $this->attributes['image']))) {
-            $image = $this->getimage($this->attributes['image'], 'categories');
-        } else {
-            $image = $this->defaultImage('default.jpg');
+        $raw = $this->attributes['image'] ?? null;
+        if ($raw && (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://'))) {
+            return $raw;
         }
-        return $image;
+        if ($raw && File::exists(public_path('storage/images/categories/' . $raw))) {
+            return $this->getimage($raw, 'categories');
+        }
+        if ($raw && File::exists(storage_path('app/public/' . $raw))) {
+            return asset('storage/' . $raw);
+        }
+
+        $slug = strtolower($this->attributes['slug'] ?? $this->attributes['name'] ?? '');
+        $categoryImages = [
+            'electronics'         => 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80',
+            'smartphones'         => 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
+            'laptops'             => 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80',
+            'audio'               => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
+            'gaming'              => 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=600&q=80',
+            'clothing'            => 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=600&q=80',
+            'mens-fashion'        => 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?auto=format&fit=crop&w=600&q=80',
+            'womens-fashion'      => 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80',
+            'kids-fashion'        => 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=600&q=80',
+            'footwear'            => 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80',
+            'home-kitchen'        => 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80',
+            'furniture'           => 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80',
+            'kitchen-appliances'  => 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=600&q=80',
+            'home-decor'          => 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80',
+            'bedding'             => 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80',
+            'books'               => 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=600&q=80',
+            'sports-outdoors'     => 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=600&q=80',
+            'fitness'             => 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80',
+        ];
+
+        foreach ($categoryImages as $key => $url) {
+            if (str_contains($slug, $key)) {
+                return $url;
+            }
+        }
+
+        $pool = array_values($categoryImages);
+        return $pool[($this->id ?? 0) % count($pool)];
     }
 
     public function setImageAttribute($value)

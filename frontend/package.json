@@ -16,8 +16,8 @@
     "react-dom": "^18.3.1",
     "react-loading-skeleton": "^3.5.0",
     "react-query": "^3.39.3",
-    "react-router": "^6.26.0",
-    "react-router-dom": "^6.26.0",
+    "react-router": "6.26.0",
+    "react-router-dom": "6.26.0",
     "react-scripts": "5.0.1",
     "react-slick": "^0.30.2",
     "react-toastify": "^10.0.5",
@@ -25,6 +25,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "prestart": "node -e \"try{require('fs').rmSync('node_modules/.cache',{recursive:true,force:true})}catch(e){}\"",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

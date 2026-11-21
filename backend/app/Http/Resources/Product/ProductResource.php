@@ -53,18 +53,30 @@ class ProductResource extends JsonResource
 
         // Collect all product images for gallery
         $allImages = collect();
-        // Add main image first
-        if ($mediaUrl) {
-            $allImages->push([
-                'id' => null,
-                'url' => $mediaUrl,
-                'path' => $mediaUrl,
-                'position' => 0,
-            ]);
-        }
         // Add gallery images using ImageResource for optimized URLs
-        if ($this->relationLoaded('images')) {
+        if ($this->relationLoaded('images') && $this->images->isNotEmpty()) {
             $allImages = $allImages->merge(ImageResource::collection($this->images)->resolve());
+        } else {
+            // Generate 4 gallery images for testing if no ProductImage records exist
+            for ($i = 0; $i < 4; $i++) {
+                $testUrl = $this->resource->getTestingImageUrl($i);
+                $allImages->push([
+                    'id' => $i + 1,
+                    'url' => $testUrl,
+                    'path' => $testUrl,
+                    'position' => $i + 1,
+                    'is_cover' => $i === 0,
+                    'urls' => [
+                        'original' => $testUrl,
+                        'thumbnail' => $testUrl,
+                        'small' => $testUrl,
+                        'medium' => $testUrl,
+                        'large' => $testUrl,
+                        'webp_medium' => $testUrl,
+                        'blur' => $testUrl,
+                    ],
+                ]);
+            }
         }
 
         // Calculate average rating and review count

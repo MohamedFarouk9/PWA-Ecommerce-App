@@ -45,13 +45,15 @@ const HomeSlider = ({ data = [] }) => {
     ],
   };
 
+  const defaultBanner = "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1600&q=80";
+
   const renderSlides = () => {
     if (!sliderData || sliderData.length === 0) {
       return (
         <div>
           <img
             className="slider-img"
-            src="/images/default-slider.jpg"
+            src={defaultBanner}
             alt="default-slider"
           />
         </div>
@@ -62,11 +64,11 @@ const HomeSlider = ({ data = [] }) => {
       <div key={slider.id || index}>
         <img
           className="slider-img"
-          src={slider.image}
+          src={slider.image || defaultBanner}
           alt={`slider-${index + 1}`}
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = "/images/default-slider.jpg";
+            e.target.src = defaultBanner;
           }}
         />
       </div>

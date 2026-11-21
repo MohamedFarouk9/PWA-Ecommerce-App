@@ -23,16 +23,23 @@ class Slider extends Model
         return $query->where('is_active', true);
     }
 
-    public function getImageAttribute(){
-        if(isset($this->attributes['image']) && File::exists(public_path('storage/images/sliders/' . $this->attributes['image']))){
-            // Retrieve the image path if it exists
-            return $this->getimage($this->attributes['image'] , 'sliders');
+    public function getImageAttribute()
+    {
+        $raw = $this->attributes['image'] ?? null;
+        if ($raw && (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://'))) {
+            return $raw;
         }
-        // Retrieve the default image from the site settings
-        $defaultImage  = SiteSetting::first()->default_image ?? 'default.jpg';
+        if ($raw && File::exists(public_path('storage/images/sliders/' . $raw))) {
+            return $this->getimage($raw, 'sliders');
+        }
 
-        // Return the default image path if the category image doesn't exist
-        return $this->defaultImage($defaultImage);
+        $banners = [
+            'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1600&q=80',
+            'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=80',
+            'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=1600&q=80',
+        ];
+
+        return $banners[(($this->id ?? 1) - 1) % count($banners)];
     }
 
 

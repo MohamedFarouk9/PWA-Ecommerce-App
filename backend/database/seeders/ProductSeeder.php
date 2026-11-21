@@ -19,14 +19,16 @@ class ProductSeeder extends Seeder
             $price    = fake()->randomFloat(2, 10, 1000);
             $quantity = fake()->numberBetween(0, 100);
 
-            Product::create([
+            $product = Product::create([
                 'name'                => fake()->words(3, true),
                 'description'         => fake()->paragraphs(2, true),
                 'price'               => $price,
                 'quantity'            => $quantity,
-                'product_status_id'   => rand(1 , 3),
+                'product_status_id'   => 1,
                 'product_category_id' => $categories->random()->id,
             ]);
+
+            $product->update(['image' => $product->getTestingImageUrl(0)]);
         }
 
         // Assign products to random sections

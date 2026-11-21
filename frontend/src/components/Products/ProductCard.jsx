@@ -17,6 +17,9 @@ const ProductCard = ({ product }) => {
   if (!product) return null;
 
   const hasDiscount = product.special_price && product.special_price !== 'na';
+  const productTitle = product.title || product.name || 'Product';
+  const fallbackImg = `https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80`;
+  const productImg = product.image || product.image_url || (product.images && product.images[0]?.url) || fallbackImg;
 
   return (
     <Col className="p-2" xl={3} lg={3} md={4} sm={6} xs={12}>
@@ -31,9 +34,13 @@ const ProductCard = ({ product }) => {
             <div className="product-image-container mb-3">
               <Card.Img
                 className="product-image"
-                src={product.image}
-                alt={product.title}
+                src={productImg}
+                alt={productTitle}
                 loading="lazy"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = fallbackImg;
+                }}
               />
               {hasDiscount && (
                 <div className="discount-badge">
@@ -43,7 +50,7 @@ const ProductCard = ({ product }) => {
             </div>
 
             {/* Product Title */}
-            <h6 className="product-title mb-2">{product.title}</h6>
+            <h6 className="product-title mb-2">{productTitle}</h6>
 
             {/* Product Price */}
             <div className="product-price">

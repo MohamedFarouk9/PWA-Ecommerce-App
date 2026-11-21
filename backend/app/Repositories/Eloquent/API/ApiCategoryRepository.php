@@ -67,8 +67,10 @@ class ApiCategoryRepository implements ApiCategoryRepositoryInterface
         }
 
         $products = $category->products()
-            ->with(['category'])
-            ->where('status', 'published')
+            ->with(['category', 'images', 'status'])
+            ->whereHas('status', function ($q) {
+                $q->where('name', 'published');
+            })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 

@@ -31,7 +31,16 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): ?string
     {
-        return $this->path ? asset('storage/' . $this->path) : null;
+        if (!$this->path) {
+            return null;
+        }
+        if (str_starts_with($this->path, 'http://') || str_starts_with($this->path, 'https://')) {
+            return $this->path;
+        }
+        if (file_exists(storage_path('app/public/' . $this->path))) {
+            return asset('storage/' . $this->path);
+        }
+        return $this->product ? $this->product->getTestingImageUrl((int) $this->position) : $this->path;
     }
 
     /**
@@ -48,6 +57,20 @@ class ProductImage extends Model
                 'large' => null,
                 'webp_medium' => null,
                 'blur' => null,
+            ];
+        }
+
+        // If external URL or local file missing, use direct URL for all variants
+        if (str_starts_with($this->path, 'http://') || str_starts_with($this->path, 'https://') || !file_exists(storage_path('app/public/' . $this->path))) {
+            $directUrl = $this->url;
+            return [
+                'original' => $directUrl,
+                'thumbnail' => $directUrl,
+                'small' => $directUrl,
+                'medium' => $directUrl,
+                'large' => $directUrl,
+                'webp_medium' => $directUrl,
+                'blur' => $directUrl,
             ];
         }
 

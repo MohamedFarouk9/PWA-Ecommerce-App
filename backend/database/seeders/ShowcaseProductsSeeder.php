@@ -390,63 +390,25 @@ class ShowcaseProductsSeeder extends Seeder
     }
 
     /**
-     * Create product images using Picsum Photos
+     * Create product images using curated high-resolution product links
      */
     private function createProductImages(Product $product, int $count): void
     {
         // Delete existing images for this product
         $product->images()->delete();
 
-        $categorySlug = $product->category->slug ?? 'default';
-        $categoryMap = [
-            'electronics' => ['tech', 'computer', 'laptop', 'phone', 'gadget'],
-            'smartphones-tablets' => ['phone', 'mobile', 'smartphone', 'tablet'],
-            'computers-accessories' => ['computer', 'laptop', 'desktop', 'keyboard', 'mouse'],
-            'audio-headphones' => ['headphones', 'audio', 'music', 'earphones'],
-            'health-fitness' => ['fitness', 'running', 'shoes', 'sport'],
-            'home-kitchen' => ['home', 'kitchen', 'appliance', 'vacuum'],
-            'fashion-apparel' => ['fashion', 'clothing', 'wear'],
-            'gaming-gear' => ['gaming', 'monitor', 'gamer'],
-            'default' => ['product', 'item'],
-        ];
-
-        $keywords = $categoryMap[$categorySlug] ?? $categoryMap['default'];
+        $coverUrl = $product->getTestingImageUrl(0);
+        $product->update(['image' => $coverUrl]);
 
         for ($i = 0; $i < $count; $i++) {
-            $keyword = $keywords[array_rand($keywords)];
-            $seed = $product->id * 100 + $i;
-            $url = "https://picsum.photos/seed/{$keyword}-{$seed}/800/800.jpg";
+            $url = $product->getTestingImageUrl($i);
 
-            $filename = "products/{$product->id}-showcase-{$i}-" . Str::random(8) . ".jpg";
-            $fullPath = storage_path('app/public/' . $filename);
-
-            // Ensure directory exists
-            $directory = dirname($fullPath);
-            if (!is_dir($directory)) {
-                mkdir($directory, 0755, true);
-            }
-
-            // Download image
-            try {
-                $response = \Illuminate\Support\Facades\Http::timeout(30)->get($url);
-                if ($response->successful()) {
-                    file_put_contents($fullPath, $response->body());
-
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'path' => $filename,
-                        'position' => $i + 1,
-                        'is_cover' => $i === 0,
-                    ]);
-
-                    $this->command->info("  Downloaded image " . ($i + 1) . " for " . $product->name);
-                } else {
-                    // Create placeholder
-                    $this->createPlaceholder($filename, $product->name);
-                }
-            } catch (\Exception $e) {
-                $this->createPlaceholder($filename, $product->name);
-            }
+            ProductImage::create([
+                'product_id' => $product->id,
+                'path'       => $url,
+                'position'   => $i + 1,
+                'is_cover'   => $i === 0,
+            ]);
         }
     }
 
