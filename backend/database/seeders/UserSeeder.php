@@ -17,6 +17,15 @@ class UserSeeder extends Seeder
     {
         $faker = Faker::create();
 
+        // Ensure Passport Personal Access Client exists for API login/register
+        if (\Illuminate\Support\Facades\DB::table('oauth_personal_access_clients')->count() === 0) {
+            \Illuminate\Support\Facades\Artisan::call('passport:client', [
+                '--personal' => true,
+                '--name' => 'PWA Ecommerce Personal Access Client',
+                '--no-interaction' => true,
+            ]);
+        }
+
         // Create Super Admin User
         $superAdmin = User::create([
             'name' => 'Super Admin',
@@ -61,7 +70,7 @@ class UserSeeder extends Seeder
                 'name' => $faker->name,
                 'email' => $faker->unique()->safeEmail,
                 'phone' => $faker->phoneNumber,
-                'password' => Hash::make('user123'),
+                'password' => 'user123',
                 'role' => 'user',
                 'status' => $faker->randomElement(['active', 'inactive']),
                 'address' => $faker->address,

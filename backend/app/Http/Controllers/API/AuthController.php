@@ -22,10 +22,12 @@ class AuthController extends Controller {
      */
     public function register(RegisterRequest $request) {
         $user = $this->authRepository->create($request->validated());
+        $token = $user->createToken('authToken')->accessToken;
 
         return response()->json([
             'message' => 'User registered successfully',
             'user'    => $user,
+            'token'   => $token,
         ], 201);
     }
 

@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../services/apiClient";
 import AppURL from "../../utils/AppURL";
 import ToastMessages from "../../toast-messages/toast";
 import { AuthContext } from "../../utils/AuthContext";
@@ -21,16 +21,19 @@ const UserLogin = () => {
     setSubmitting(true);
 
     try {
-      const response = await axios.post(AppURL.UserLogin, { email, password });
-      if (response.status === 200) {
-        login(response.data.token);
+      const response = await apiClient.post(AppURL.UserLogin, { email, password });
+      if (response.status === 200 && response.data?.token) {
+        login(response.data.token, response.data.user);
         ToastMessages.showSuccess("Login successful!");
         navigate("/profile");
       }
     } catch (error) {
-      setMessage(
-        ToastMessages.showWarning("Login failed. Please check your credentials.")
-      );
+      const errMsg =
+        error.response?.data?.errors
+          ? Object.values(error.response.data.errors).flat().join(" ")
+          : error.response?.data?.message || "Login failed. Please check your credentials.";
+      ToastMessages.showWarning(errMsg);
+      setMessage(errMsg);
     } finally {
       setSubmitting(false);
     }

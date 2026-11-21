@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import ToastMessages from "../../toast-messages/toast";
-import axios from "axios";
+import apiClient from "../../services/apiClient";
 import AppURL from "../../utils/AppURL";
+import { AuthContext } from "../../utils/AuthContext";
 import { ResponsiveLayout } from "../../layouts/ResponsiveLayout";
 
 const Register = () => {
@@ -12,6 +13,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const { login } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -30,6 +32,11 @@ const Register = () => {
       hasErrors = true;
     }
 
+    if (password.length < 6) {
+      ToastMessages.showWarning("Password must be at least 6 characters");
+      hasErrors = true;
+    }
+
     if (password !== confirmPassword) {
       ToastMessages.showWarning("Passwords do not match");
       hasErrors = true;
@@ -45,13 +52,21 @@ const Register = () => {
 
     try {
       setSubmitting(true);
-      await axios.post(AppURL.UserRegister, data);
-      ToastMessages.showSuccess("Registration successful! Please log in.");
-      navigate("/login");
+      const response = await apiClient.post(AppURL.UserRegister, data);
+      if (response.data?.token) {
+        login(response.data.token, response.data.user);
+        ToastMessages.showSuccess("Account created! Welcome aboard.");
+        navigate("/profile");
+      } else {
+        ToastMessages.showSuccess("Registration successful! Please sign in.");
+        navigate("/login");
+      }
     } catch (error) {
-      ToastMessages.showError(
-        error.response?.data?.message || "Registration failed"
-      );
+      const errMsg =
+        error.response?.data?.errors
+          ? Object.values(error.response.data.errors).flat().join(" ")
+          : error.response?.data?.message || "Registration failed";
+      ToastMessages.showError(errMsg);
     } finally {
       setSubmitting(false);
     }

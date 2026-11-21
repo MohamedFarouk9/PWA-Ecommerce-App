@@ -17,10 +17,15 @@ export const AuthProvider = ({ children }) => {
         setHasFetched(false);
     };
 
-    const login = (newToken) => {
+    const login = (newToken, initialUser = null) => {
         localStorage.setItem("auth_token", newToken);
         setToken(newToken);
-        setHasFetched(false);
+        if (initialUser) {
+            setUser({ user: initialUser });
+            setHasFetched(true);
+        } else {
+            setHasFetched(false);
+        }
     };
 
     // Only fetch user data if token exists AND we haven't fetched yet
