@@ -1,27 +1,121 @@
-.footerback{
-    background-color: #e9e9e9;
-}
-.footer-text{
-    font-size: 13px;
-    font-family: 'Roboto Condensed', sans-serif;
-    font-weight: 600;
+/* ==========================================================================
+   footer.css — Modern Dark Storefront Footer & Mobile Bottom Navigation Bar
+   ========================================================================== */
+
+.ecom-footer {
+  background: #0f172a;
+  color: #cbd5e1;
+  padding: 64px 0 0;
+  margin-top: 72px;
+  font-size: 14px;
 }
 
-.footer-link{
-    text-decoration: none;
-    color: #000000;
-    font-size: 15px;
-    font-family: 'Roboto Condensed', sans-serif;
-    font-weight: 400;
-}
-.footer-link:hover{
-    text-decoration: none;
-    color: #051b35;
+.ecom-footer-title {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 18px;
 }
 
-.footer-menu-title{
-    font-size: 18px;
-    color: #000000;
-    font-family: 'Roboto Condensed', sans-serif;
-    font-weight: 600;
+.ecom-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ecom-footer-links li {
+  margin-bottom: 10px;
+}
+
+.ecom-footer-links a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.2s ease, padding-left 0.2s ease;
+  display: inline-block;
+}
+
+.ecom-footer-links a:hover {
+  color: #ffffff;
+  padding-left: 4px;
+}
+
+.ecom-social-list {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.ecom-social-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+}
+
+.ecom-social-btn:hover {
+  background: var(--ecom-primary);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.ecom-footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 48px;
+  padding: 20px 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Mobile Bottom Tab Bar & Footer */
+.ecom-mobile-footer {
+  background: #0f172a;
+  color: #94a3b8;
+  padding: 32px 16px 84px;
+  margin-top: 48px;
+  text-align: center;
+}
+
+.ecom-mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--ecom-border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0;
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.ecom-mobile-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--ecom-muted);
+  text-decoration: none !important;
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.ecom-mobile-tab i {
+  font-size: 17px;
+}
+
+.ecom-mobile-tab:hover,
+.ecom-mobile-tab.active {
+  color: var(--ecom-primary);
 }

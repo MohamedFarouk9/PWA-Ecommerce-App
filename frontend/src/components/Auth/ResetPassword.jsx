@@ -1,26 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import Forget from "../../assets/images/forget.jpg";
+import { Link, useParams } from "react-router-dom";
 import ToastMessages from "../../toast-messages/toast";
 import axios from "axios";
 import AppURL from "../../utils/AppURL";
-import { useParams } from "react-router-dom";
 import { ResponsiveLayout } from "../../layouts/ResponsiveLayout";
 
 const ResetPassword = () => {
-  const { token } = useParams(); // Extract token from URL
+  const { token } = useParams();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     password_confirmation: "",
-    token: "", // Store token in state
+    token: "",
   });
 
   useEffect(() => {
     if (token) {
       setFormData((prevData) => ({
         ...prevData,
-        token: token, // Automatically set token in form data
+        token: token,
       }));
     }
   }, [token]);
@@ -28,27 +27,21 @@ const ResetPassword = () => {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value, // Correct field names
+      [e.target.name]: e.target.value,
     });
   };
 
   const validateForm = () => {
     const { email, password, password_confirmation } = formData;
-
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       ToastMessages.showWarning("Please enter a valid email address.");
       return false;
     }
-
-    // Validate password match
     if (password !== password_confirmation) {
       ToastMessages.showWarning("Passwords do not match");
       return false;
     }
-
-    // Validate password length
     if (password.length < 6) {
       ToastMessages.showWarning("Password must be at least 6 characters long.");
       return false;
@@ -58,10 +51,7 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return; // Stop submission if validation fails
-    }
+    if (!validateForm()) return;
 
     try {
       const response = await axios.post(AppURL.PasswordReset, formData);
@@ -72,7 +62,7 @@ const ResetPassword = () => {
           password: "",
           password_confirmation: "",
           token: "",
-        }); // reset the form
+        });
       }
     } catch (error) {
       ToastMessages.showError(
@@ -82,77 +72,86 @@ const ResetPassword = () => {
   };
 
   return (
-    <>
-      <ResponsiveLayout>
-        <Container>
-          <Row className="p-2">
-            <Col
-              className="shadow-sm bg-white mt-2"
-              md={12}
-              lg={12}
-              sm={12}
-              xs={12}
-            >
-              <Row className="text-center">
-                <Col
-                  className="d-flex justify-content-center"
-                  md={6}
-                  lg={6}
-                  sm={12}
-                  xs={12}
-                >
-                  <Form className="onboardForm" onSubmit={handleSubmit}>
-                    <h4 className="section-title-login"> RESET PASSWORD </h4>
+    <ResponsiveLayout>
+      <Container className="py-4">
+        <div className="ecom-auth-card">
+          <Row className="g-0">
+            <Col lg={6} md={6} sm={12} className="ecom-auth-form-col">
+              <Form className="onboardForm" onSubmit={handleSubmit}>
+                <div className="mb-4 text-start">
+                  <span className="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-1 rounded-pill">
+                    Security Update
+                  </span>
+                  <h3 className="section-title-login">Set a New Password</h3>
+                  <p className="section-sub-title mb-0">
+                    Choose a strong password of at least 6 characters.
+                  </p>
+                </div>
 
-                    <input
-                      className="form-control m-2"
-                      type="email"
-                      name="email"
-                      placeholder="Enter Your Email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                    />
-                    <input
-                      className="form-control m-2"
-                      type="password"
-                      name="password"
-                      placeholder="Your New Password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                    />
-                    <input
-                      className="form-control m-2"
-                      type="password"
-                      name="password_confirmation"
-                      placeholder="Confirm Your Password"
-                      value={formData.password_confirmation}
-                      onChange={handleChange}
-                      required
-                    />
-                    <Button
-                      className="btn btn-block m-2 site-btn-login"
-                      type="submit"
-                    >
-                      {" "}
-                      Reset Password{" "}
-                    </Button>
-                  </Form>
-                </Col>
-                <Col className="p-0 Desktop m-0" md={6} lg={6} sm={6} xs={6}>
-                  <img
-                    className="onboardBanner"
-                    src={Forget}
-                    alt="Reset Password"
+                <div className="mb-3 text-start">
+                  <label className="ecom-form-label">Email Address</label>
+                  <input
+                    className="form-control ecom-form-control"
+                    type="email"
+                    name="email"
+                    placeholder="name@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
                   />
-                </Col>
-              </Row>
+                </div>
+
+                <div className="mb-3 text-start">
+                  <label className="ecom-form-label">New Password</label>
+                  <input
+                    className="form-control ecom-form-control"
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3 text-start">
+                  <label className="ecom-form-label">Confirm Password</label>
+                  <input
+                    className="form-control ecom-form-control"
+                    type="password"
+                    name="password_confirmation"
+                    placeholder="••••••••"
+                    value={formData.password_confirmation}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <Button className="site-btn-login w-100 mt-2" type="submit">
+                  <i className="fa fa-key"></i>
+                  <span>Update Password</span>
+                </Button>
+
+                <div className="text-center mt-4 pt-3 border-top small text-muted">
+                  <Link to="/login" className="text-primary fw-bold text-decoration-none">
+                    Return to Sign In
+                  </Link>
+                </div>
+              </Form>
+            </Col>
+
+            <Col lg={6} md={6} className="d-none d-md-flex ecom-auth-visual-col">
+              <div className="pe-lg-4">
+                <h2 className="fw-bold mb-3">Keep Your Account Protected</h2>
+                <p className="text-light opacity-75 mb-0">
+                  Once updated, you can immediately sign in with your new credentials.
+                </p>
+              </div>
             </Col>
           </Row>
-        </Container>
-      </ResponsiveLayout>
-    </>
+        </div>
+      </Container>
+    </ResponsiveLayout>
   );
 };
 

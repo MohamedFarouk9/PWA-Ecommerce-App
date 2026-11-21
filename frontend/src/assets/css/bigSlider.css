@@ -1,12 +1,172 @@
+/* ==========================================================================
+   bigSlider.css — Hero Section, Promotional Banner Slider & Trust Strip
+   ========================================================================== */
+
+.ecom-hero-section {
+  padding: 20px 0 10px;
+}
+
+.ecom-slider-wrapper {
+  position: relative;
+  border-radius: var(--ecom-radius);
+  overflow: hidden;
+  box-shadow: var(--ecom-shadow-md);
+  height: 410px;
+  background: var(--ecom-dark);
+}
+
+.ecom-slide-item {
+  position: relative;
+  height: 410px;
+  width: 100%;
+}
+
+.ecom-slide-img,
+.slider-img {
+  width: 100% !important;
+  height: 410px !important;
+  object-fit: cover !important;
+  filter: brightness(0.75);
+}
+
+.ecom-slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.86) 0%, rgba(15, 23, 42, 0.42) 55%, rgba(15, 23, 42, 0.05) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 52px;
+  color: #ffffff;
+}
+
+.ecom-slide-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(37, 99, 235, 0.92);
+  color: #ffffff;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  width: fit-content;
+  margin-bottom: 14px;
+}
+
+.ecom-slide-title {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.15;
+  max-width: 500px;
+  margin-bottom: 12px;
+  letter-spacing: -0.7px;
+}
+
+.ecom-slide-subtitle {
+  font-size: 15.5px;
+  color: #e2e8f0;
+  max-width: 440px;
+  margin-bottom: 24px;
+}
+
+.ecom-slide-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: var(--ecom-dark) !important;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  width: fit-content;
+  text-decoration: none !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.ecom-slide-cta:hover {
+  background: var(--ecom-primary);
+  color: #ffffff !important;
+  transform: translateY(-2px);
+}
+
 .slick-dots {
-    top: 90% ;
-}
-.slider-img{
-    width: 100% !important;
-    height: 380px;
+  bottom: 16px !important;
+  top: auto !important;
 }
 
-.slick-slide{
-    height:auto !important;      
+.slick-dots li button:before {
+  color: #ffffff !important;
+  opacity: 0.5;
+  font-size: 9px;
 }
 
+.slick-dots li.slick-active button:before {
+  color: #ffffff !important;
+  opacity: 1;
+}
+
+/* Value / Trust Strip */
+.ecom-trust-strip {
+  background: #ffffff;
+  border: 1px solid var(--ecom-border);
+  border-radius: var(--ecom-radius);
+  padding: 18px 24px;
+  margin: 22px 0 10px;
+  box-shadow: var(--ecom-shadow-sm);
+}
+
+.ecom-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ecom-trust-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--ecom-primary-soft);
+  color: var(--ecom-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ecom-trust-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ecom-dark);
+  margin: 0;
+}
+
+.ecom-trust-desc {
+  font-size: 12.5px;
+  color: var(--ecom-muted);
+  margin: 0;
+}
+
+@media (max-width: 767.98px) {
+  .ecom-slider-wrapper,
+  .ecom-slide-item,
+  .ecom-slide-img,
+  .slider-img {
+    height: 300px !important;
+  }
+  .ecom-slide-overlay {
+    padding: 24px;
+  }
+  .ecom-slide-title {
+    font-size: 24px;
+  }
+  .ecom-slide-subtitle {
+    font-size: 13.5px;
+    margin-bottom: 16px;
+  }
+}

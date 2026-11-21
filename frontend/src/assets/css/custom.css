@@ -1,30 +1,15 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap");
+/* ==========================================================================
+   custom.css — Master Stylesheet Entry Point
+   ========================================================================== */
 
-@import "bigSlider.css";
-@import "button.css";
-@import "card.css";
-@import "footer.css";
-@import "megaMenu.css";
-@import "navMenuDesktop.css";
-@import "navMenuMobile.css";
-@import "typo.css";
-@import "megaMenuMobile.css";
-@import "responsive.css";
-@import "megaMenuDesktop.css";
-@import "onboard.css";
 @import "common.css";
-@import "productDetails.css";
+@import "typo.css";
+@import "button.css";
+@import "navMenuDesktop.css";
+@import "megaMenu.css";
+@import "bigSlider.css";
+@import "card.css";
+@import "onboard.css";
 @import "cartList.css";
-
-
-
-
-
-
-
-body {
-    background-color: #ffff;
-}
-    
-/* Animate.css */ 
-/* framer-motion */
+@import "productDetails.css";
+@import "footer.css";

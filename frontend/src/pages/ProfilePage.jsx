@@ -1,62 +1,46 @@
 import React, { useContext, useEffect, useState } from "react";
-import FooterDesktop from "../components/common/FooterDesktop";
-import FooterMobile from "../components/common/FooterMobile";
-import NavMenuDesktop from "../components/common/NavMenuDesktop";
-import NavMenuMobile from "../components/common/NavMenuMoblie";
 import Profile from "../components/common/Profile";
 import { AuthContext } from "../utils/AuthContext";
-import { Container } from "react-bootstrap";
+import { Container, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { ResponsiveLayout } from "../layouts/ResponsiveLayout";
 
 const ProfilePage = () => {
   const { user, loading, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [isChecking, setIsChecking] = useState(true); // Prevents flickering
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     window.scroll(0, 0);
-
-    // Start a timer that sets 'isChecking' to false after 500ms
     const timer = setTimeout(() => {
       setIsChecking(false);
-    }, 500);
-
-    // Cleanup function to clear the timeout if component unmounts
+    }, 300);
     return () => clearTimeout(timer);
-  }, []); // Empty dependency array to run only once
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !isChecking && !user) {
+      navigate("/login");
+    }
+  }, [loading, isChecking, user, navigate]);
 
   if (loading || isChecking) {
     return (
-      <Container className="text-center">
-        <h2>Loading...</h2>
-      </Container>
+      <ResponsiveLayout>
+        <Container className="text-center py-5">
+          <Spinner animation="border" variant="primary" />
+          <p className="text-muted mt-2">Loading your profile...</p>
+        </Container>
+      </ResponsiveLayout>
     );
   }
 
-  if (!user) {
-    return navigate("/login"); // Redirect if not logged in
-  }
+  if (!user) return null;
 
   return (
-    <>
-      <div className="Desktop">
-        <NavMenuDesktop />
-      </div>
-
-      <div className="Mobile">
-        <NavMenuMobile />
-      </div>
-
+    <ResponsiveLayout>
       <Profile userData={user} logout={logout} />
-
-      <div className="Desktop">
-        <FooterDesktop />
-      </div>
-
-      <div className="Mobile">
-        <FooterMobile />
-      </div>
-    </>
+    </ResponsiveLayout>
   );
 };
 

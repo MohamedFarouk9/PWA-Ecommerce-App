@@ -1,81 +1,164 @@
-.accordion {
-    background-color: #f8f8f8;
-    color: #444;
-    cursor: pointer;
-    padding: 7px;
-    width: 100%;
-    border: 1px solid #ddd;
-    font-size: 14px;
-    text-align: left;
-    outline: none;
-    font-weight: 600;
-    font-family: 'Roboto Condensed', sans-serif;
-    transition: 0.4s;
-    overflow: paged-y;
-    box-shadow: 0 0 2px 0 rgba(57, 78, 234, 0.1)
-}
-.active, .accordion:hover {
-    color: #ffffff;
-    font-weight: 400;
-    background-color: #051b35;
-}
-.accordion:after {
-    content: '\276F';
-    color: #c2c2c2;
-    float: right;
-    margin-left: 5px;
-}
-.active:after,hover {
-    color: #ffffff;
-    content: "\276E";
-}
-.panel {
-    padding: 0 10px;
-    background-color: white;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.2s ease-out;
-}
-.accordionMenuDiv{
-    width: 100%;
-    direction:rtl;
-    font-family: 'Roboto Condensed', sans-serif !important;
-    font-weight: 300 !important;
-    height: 380px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: #e9e9e9 #ffffff;
+/* ==========================================================================
+   megaMenu.css — Category Sidebar Card & Drawer Navigation Items
+   ========================================================================== */
+
+.ecom-megamenu-card {
+  background: #ffffff;
+  border-radius: var(--ecom-radius);
+  border: 1px solid var(--ecom-border);
+  box-shadow: var(--ecom-shadow-sm);
+  overflow: hidden;
+  height: 410px;
+  display: flex;
+  flex-direction: column;
 }
 
-.accordionMenuDiv::-webkit-scrollbar {
-    width:10px !important;
+.ecom-megamenu-header {
+  padding: 14px 18px;
+  background: var(--ecom-dark);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.2px;
 }
 
-.accordionMenuDiv::-webkit-scrollbar-thumb {
-    background: #dedede !important;
+.ecom-megamenu-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px;
 }
 
-.accordionMenuDiv::-webkit-scrollbar-thumb:hover {
-    background: #808080 !important;
+.ecom-megamenu-item {
+  border-radius: 9px;
+  margin-bottom: 3px;
+  overflow: hidden;
 }
 
-.accordionMenuDiv::-webkit-scrollbar-track {
-    background: #F4F4F4!important;
+.ecom-megamenu-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ecom-slate);
+  text-align: left;
+  transition: all 0.18s ease;
 }
 
+.ecom-megamenu-btn:hover,
+.ecom-megamenu-btn.active {
+  background: var(--ecom-primary-soft);
+  color: var(--ecom-primary);
+}
 
-.accordionMenuDivInside{
-    direction:ltr;
+.ecom-megamenu-sub {
+  padding: 4px 12px 10px 36px;
+  list-style: none;
+  margin: 0;
 }
-.accordionMenuIcon{
-    width: 20px;
-    height: auto;
+
+.ecom-megamenu-sub li {
+  margin: 5px 0;
 }
-.accordionItem{
-    color: #444;
-    text-decoration: none;
+
+.ecom-megamenu-sub a {
+  color: var(--ecom-muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s ease;
+  display: block;
 }
-.accordionItem:hover{
-    text-decoration: none;
+
+.ecom-megamenu-sub a:hover {
+  color: var(--ecom-primary);
+}
+
+/* Drawer Accordion Styles (MegaMenuDesktop & MegaMenuMobile) */
+.accordionMenuDivAll,
+.accordionMenuDivMobile {
+  width: 100%;
+  padding-top: 8px;
+}
+
+.accordionAll,
+.accordionMobile {
+  background-color: #ffffff;
+  color: var(--ecom-slate);
+  cursor: pointer;
+  padding: 10px 12px;
+  width: 100%;
+  border: none;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  outline: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.accordionAll:hover,
+.accordionMobile:hover,
+.accordionAll.active,
+.accordionMobile.active {
+  background-color: var(--ecom-primary-soft);
+  color: var(--ecom-primary);
+}
+
+.accordionMenuIconAll,
+.accordionMenuIconMobile {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+  margin-right: 8px;
+}
+
+.panelAll,
+.panelMobile {
+  padding: 0 12px 0 32px;
+  background-color: #ffffff;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.22s ease-out;
+}
+
+.panelAll ul,
+.panelMobile ul {
+  list-style: none;
+  padding: 4px 0 8px;
+  margin: 0;
+}
+
+.panelAll li,
+.panelMobile li {
+  margin: 6px 0;
+}
+
+.accordionItem,
+.accordionItemAll,
+.accordionItemMobile {
+  color: var(--ecom-muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  display: block;
+}
+
+.accordionItem:hover,
+.accordionItemAll:hover,
+.accordionItemMobile:hover {
+  color: var(--ecom-primary);
+  text-decoration: none;
 }

@@ -1,81 +1,59 @@
 import React from "react";
-import { Card, Col, Container, Row } from "react-bootstrap";
+import { Col, Container, Row, Card } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import Breadcrumb from "react-bootstrap/Breadcrumb";
-
-const ProductCard = ({ product }) => (
-  <Col className="p-0" xl={3} lg={3} md={3} sm={6} xs={6}>
-    <Link className="text-link" to={`/product-details/${product.id}`}>
-      <Card className="image-box w-100">
-        <Card.Body>
-          <Card.Img
-            className="center w-75"
-            src={product.image}
-            alt={product.title}
-          />
-          <h5 className="product-name-on-card">{product.title}</h5>
-          {product.special_price === "na" ? (
-            <p className="product-price-on-card">
-              Price : ${product.price}
-            </p>
-          ) : (
-            <p className="product-price-on-card">
-              Price :{" "}
-              <del className="text-secondary">${product.price}</del> $
-              {product.special_price}
-            </p>
-          )}
-        </Card.Body>
-      </Card>
-    </Link>
-  </Col>
-);
+import ProductCard from "../Products/ProductCard";
+import { ProductSkeleton } from "../ui/LoadingStates";
 
 const SearchList = ({ ProductData = [], SearchKey, isLoading }) => {
-  const renderBreadcrumb = () => (
-    <div className="breadbody">
-      <Breadcrumb>
-        <Breadcrumb.Item>
-          <Link className="text-link" to="/">
-            Home
-          </Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>Search Results for: {SearchKey}</Breadcrumb.Item>
-      </Breadcrumb>
-    </div>
-  );
-
-  const renderProducts = () => {
-    if (isLoading) {
-      return (
-        <Col className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </Col>
-      );
-    }
-
-    if (ProductData.length === 0) {
-      return (
-        <Col className="text-center py-5">
-          <h5>No products found for "{SearchKey}"</h5>
-        </Col>
-      );
-    }
-
-    return ProductData.map((product, index) => (
-      <ProductCard key={product.id || index} product={product} />
-    ));
-  };
+  const items = Array.isArray(ProductData)
+    ? ProductData
+    : ProductData?.data || ProductData?.products || [];
 
   return (
-    <Container className="text-center" fluid={true}>
-      {renderBreadcrumb()}
-      <div className="section-title text-center mb-40 mt-2">
-        <h2>Results for "{SearchKey}"</h2>
+    <Container className="py-3">
+      <div className="ecom-breadcrumb-bar">
+        <Breadcrumb>
+          <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }}>
+            Home
+          </Breadcrumb.Item>
+          <Breadcrumb.Item active>Search: "{SearchKey}"</Breadcrumb.Item>
+        </Breadcrumb>
       </div>
-      <Row>{renderProducts()}</Row>
+
+      <div className="ecom-section-header">
+        <div>
+          <h2 className="ecom-section-title">Search Results for "{SearchKey}"</h2>
+          <p className="ecom-section-subtitle">
+            Found {items.length} matching products
+          </p>
+        </div>
+      </div>
+
+      <Row className="g-2">
+        {isLoading ? (
+          <ProductSkeleton count={8} />
+        ) : items.length === 0 ? (
+          <Col xs={12}>
+            <Card className="text-center py-5">
+              <Card.Body>
+                <i className="fa fa-search fa-3x text-muted mb-3"></i>
+                <h5 className="fw-bold">No products found for "{SearchKey}"</h5>
+                <p className="text-muted mb-3">
+                  Try searching with a different keyword or browse our categories.
+                </p>
+                <Link to="/" className="site-btn text-decoration-none">
+                  Back to Home
+                </Link>
+              </Card.Body>
+            </Card>
+          </Col>
+        ) : (
+          items.map((product, index) => (
+            <ProductCard key={product.id || index} product={product} />
+          ))
+        )}
+      </Row>
     </Container>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Container, Row, Col, Card, Badge, Table, Spinner, Button, Alert } from "react-bootstrap";
+import { Container, Row, Col, Card, Badge, Table, Spinner, Alert } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { ResponsiveLayout } from "../layouts/ResponsiveLayout";
 import { AuthContext } from "../utils/AuthContext";
@@ -56,12 +56,12 @@ const OrdersPage = () => {
   return (
     <ResponsiveLayout>
       <Container className="py-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="ecom-section-header">
           <div>
-            <h2 className="fw-bold mb-1">My Orders</h2>
-            <p className="text-muted mb-0">Track your order statuses, invoices, and shipment tracking</p>
+            <h2 className="ecom-section-title">My Orders</h2>
+            <p className="ecom-section-subtitle">Track your order statuses, invoices, and shipment tracking</p>
           </div>
-          <Link to="/" className="btn btn-outline-primary">
+          <Link to="/" className="btn btn-outline-primary btn-sm">
             <i className="fa fa-shopping-bag me-1"></i> Continue Shopping
           </Link>
         </div>

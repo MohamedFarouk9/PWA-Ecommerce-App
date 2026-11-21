@@ -1,36 +1,42 @@
 import React, { useContext, useEffect, useMemo } from "react";
-import { Container, Row, Col, Button, Card, Form, Spinner } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { Container, Row, Col, Button, Card, Spinner } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
 import { ResponsiveLayout } from "../../layouts/ResponsiveLayout";
 import { CartContext } from "../../utils/CartContext";
 
+const FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80";
+
 const Cart = () => {
   const navigate = useNavigate();
-  const { cart = [], loading, updateCart, removeFromCart, refreshCart } = useContext(CartContext);
+  const { cart = [], loading, updateCart, removeFromCart, refreshCart } =
+    useContext(CartContext);
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-
+    window.scrollTo({ top: 0, behavior: "smooth" });
     refreshCart?.();
   }, [refreshCart]);
 
-  const cartItems = useMemo(() => Array.isArray(cart) ? cart : [], [cart]);
+  const cartItems = useMemo(() => (Array.isArray(cart) ? cart : []), [cart]);
 
   const totalQuantity = useMemo(
     () => cartItems.reduce((acc, item) => acc + Number(item.quantity || 0), 0),
     [cartItems]
   );
 
-  const totalPrice = useMemo(
-    () => cartItems.reduce((acc, item) => {
-      const unitPrice = Number(item.price ?? item.product?.price ?? item.product?.special_price ?? 0);
-      return acc + Number(item.quantity || 0) * unitPrice;
-    }, 0),
+  const subtotal = useMemo(
+    () =>
+      cartItems.reduce((acc, item) => {
+        const unitPrice = Number(
+          item.price ?? item.product?.special_price ?? item.product?.price ?? 0
+        );
+        return acc + Number(item.quantity || 0) * unitPrice;
+      }, 0),
     [cartItems]
   );
+
+  const shipping = subtotal > 0 ? (subtotal >= 99 ? 0 : 15) : 0;
+  const grandTotal = subtotal + shipping;
 
   const handleQuantityChange = async (itemId, value) => {
     const quantity = Number(value) >= 1 ? Number(value) : 1;
@@ -43,7 +49,7 @@ const Cart = () => {
         order: {
           items: cartItems,
           totalQuantity,
-          totalPrice,
+          totalPrice: subtotal,
         },
       },
     });
@@ -52,8 +58,9 @@ const Cart = () => {
   if (loading) {
     return (
       <ResponsiveLayout>
-        <Container className="py-4 text-center">
-          <Spinner animation="border" />
+        <Container className="py-5 text-center">
+          <Spinner animation="border" variant="primary" />
+          <p className="text-muted mt-2">Loading your shopping cart...</p>
         </Container>
       </ResponsiveLayout>
     );
@@ -62,94 +69,185 @@ const Cart = () => {
   return (
     <ResponsiveLayout>
       <Container className="py-4">
-        <div className="section-title text-center mb-55">
-          <h2>Product Cart List</h2>
+        <div className="ecom-section-header">
+          <div>
+            <h2 className="ecom-section-title">Shopping Cart</h2>
+            <p className="ecom-section-subtitle">
+              {totalQuantity} {totalQuantity === 1 ? "item" : "items"} in your bag
+            </p>
+          </div>
+          <Link to="/" className="btn btn-outline-primary btn-sm">
+            <i className="fa fa-arrow-left me-1"></i> Continue Shopping
+          </Link>
         </div>
 
-        <Row className="g-3">
-          {cartItems.length === 0 ? (
-            <Col xs={12}>
-              <Card className="shadow-sm border-0">
-                <Card.Body className="text-center">
-                  <h5>Your cart is empty</h5>
-                  <p>Add products from the product page to see them here.</p>
-                </Card.Body>
-              </Card>
-            </Col>
-          ) : (
-            cartItems.map((item) => {
-              const product = item.product || {};
-              const image = product.image || product.images?.[0]?.url || "/images/no-image.png";
-              const name = product.title || product.name || product.product_name || "Product";
-              const price = item.price ?? product.price ?? 0;
+        {cartItems.length === 0 ? (
+          <Card className="text-center py-5">
+            <Card.Body>
+              <div
+                className="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                style={{
+                  width: 72,
+                  height: 72,
+                  background: "var(--ecom-primary-soft)",
+                  color: "var(--ecom-primary)",
+                }}
+              >
+                <i className="fa fa-shopping-bag fa-2x"></i>
+              </div>
+              <h4 className="fw-bold">Your shopping cart is empty</h4>
+              <p className="text-muted mb-4">
+                Looks like you haven't added anything to your cart yet.
+              </p>
+              <Link to="/" className="site-btn text-decoration-none">
+                <i className="fa fa-compass"></i> Explore Products
+              </Link>
+            </Card.Body>
+          </Card>
+        ) : (
+          <Row className="g-4">
+            {/* Cart Items List */}
+            <Col lg={8} md={12}>
+              {cartItems.map((item) => {
+                const product = item.product || {};
+                const image =
+                  product.image ||
+                  product.image_url ||
+                  product.images?.[0]?.url ||
+                  FALLBACK_IMG;
+                const name =
+                  product.title ||
+                  product.name ||
+                  product.product_name ||
+                  "Product";
+                const price = Number(
+                  item.price ?? product.special_price ?? product.price ?? 0
+                );
+                const lineTotal = Number(item.quantity || 1) * price;
 
-              return (
-                <Col lg={12} md={12} sm={12} xs={12} key={item.id}>
-                  <Card className="shadow-sm border-0">
-                    <Card.Body>
-                      <Row className="align-items-center">
-                        <Col md={3} sm={12} className="mb-3 mb-md-0">
+                return (
+                  <div key={item.id} className="ecom-cart-item-card">
+                    <Row className="align-items-center g-3">
+                      <Col xs="auto">
+                        <Link to={`/product-details/${product.id || item.product_id}`}>
                           <img
-                            className="cart-product-img w-100"
+                            className="ecom-cart-thumb"
                             src={image}
                             alt={name}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = FALLBACK_IMG;
+                            }}
                           />
-                        </Col>
+                        </Link>
+                      </Col>
 
-                        <Col md={5} sm={12}>
-                          <h5 className="product-name">{name}</h5>
-                          <p className="mb-2">Price: <strong>${price}</strong></p>
-                          <p className="mb-0">Total: <strong>${item.quantity * price}</strong></p>
-                        </Col>
+                      <Col>
+                        <Link
+                          to={`/product-details/${product.id || item.product_id}`}
+                          className="text-link"
+                        >
+                          <h6 className="fw-bold mb-1 text-dark">{name}</h6>
+                        </Link>
+                        <div className="small text-muted mb-2">
+                          Unit Price: <strong className="text-dark">${price.toFixed(2)}</strong>
+                        </div>
+                        <div className="d-flex flex-wrap align-items-center gap-3">
+                          <div className="ecom-qty-group">
+                            <button
+                              type="button"
+                              className="ecom-qty-btn"
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  Math.max(1, Number(item.quantity) - 1)
+                                )
+                              }
+                            >
+                              −
+                            </button>
+                            <span className="ecom-qty-val">{item.quantity}</span>
+                            <button
+                              type="button"
+                              className="ecom-qty-btn"
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.id,
+                                  Number(item.quantity) + 1
+                                )
+                              }
+                            >
+                              +
+                            </button>
+                          </div>
 
-                        <Col md={2} sm={6} className="mb-3 mb-sm-0">
-                          <Form.Control
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                          />
-                        </Col>
-
-                        <Col md={2} sm={6}>
-                          <Button
-                            variant="danger"
-                            className="w-100"
+                          <button
+                            type="button"
+                            className="btn btn-sm text-danger p-0"
                             onClick={() => removeFromCart(item.id)}
                           >
-                            <i className="fa fa-trash-alt"></i> Remove
-                          </Button>
-                        </Col>
-                      </Row>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              );
-            })
-          )}
+                            <i className="fa fa-trash-alt me-1"></i> Remove
+                          </button>
+                        </div>
+                      </Col>
 
-          {cartItems.length > 0 && (
-            <Col lg={12} md={12} sm={12} xs={12}>
-              <Card className="shadow-sm border-0">
-                <Card.Body>
-                  <Row className="align-items-center">
-                    <Col md={8} sm={12}>
-                      <h5 className="mb-2">Cart Summary</h5>
-                      <p className="mb-1">Items: {totalQuantity}</p>
-                      <p className="mb-1">Products: {cartItems.length}</p>
-                      <p className="mb-0">Total Price: ${totalPrice.toFixed(2)}</p>
-                    </Col>
-                    <Col md={4} sm={12}>
-                      <Button className="btn site-btn w-100" onClick={handleCheckout}>
-                        <i className="fa fa-shopping-cart"></i> Checkout
-                      </Button>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
+                      <Col xs={12} sm="auto" className="text-sm-end">
+                        <div className="small text-muted">Subtotal</div>
+                        <div className="fs-5 fw-bold text-dark">
+                          ${lineTotal.toFixed(2)}
+                        </div>
+                      </Col>
+                    </Row>
+                  </div>
+                );
+              })}
             </Col>
-          )}
-        </Row>
+
+            {/* Sticky Order Summary */}
+            <Col lg={4} md={12}>
+              <div className="ecom-summary-card">
+                <h5 className="fw-bold mb-3">Order Summary</h5>
+                <div className="ecom-summary-row">
+                  <span>Subtotal ({totalQuantity} items)</span>
+                  <strong className="text-dark">${subtotal.toFixed(2)}</strong>
+                </div>
+                <div className="ecom-summary-row">
+                  <span>Estimated Shipping</span>
+                  {shipping === 0 ? (
+                    <span className="text-success fw-bold">FREE</span>
+                  ) : (
+                    <strong className="text-dark">${shipping.toFixed(2)}</strong>
+                  )}
+                </div>
+                {shipping > 0 && (
+                  <div className="alert alert-info py-2 px-3 small mb-3">
+                    <i className="fa fa-truck me-1"></i> Add{" "}
+                    <strong>${(99 - subtotal).toFixed(2)}</strong> more for FREE
+                    express shipping!
+                  </div>
+                )}
+
+                <div className="ecom-summary-total">
+                  <span>Total</span>
+                  <span className="text-primary">${grandTotal.toFixed(2)}</span>
+                </div>
+
+                <Button
+                  className="site-btn w-100 mt-4"
+                  onClick={handleCheckout}
+                >
+                  <span>Proceed to Checkout</span>
+                  <i className="fa fa-arrow-right"></i>
+                </Button>
+
+                <div className="text-center mt-3 small text-muted">
+                  <i className="fa fa-lock me-1 text-success"></i> SSL Encrypted &
+                  30-Day Money-Back Guarantee
+                </div>
+              </div>
+            </Col>
+          </Row>
+        )}
       </Container>
     </ResponsiveLayout>
   );

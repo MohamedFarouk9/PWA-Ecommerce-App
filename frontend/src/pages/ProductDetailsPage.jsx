@@ -8,10 +8,8 @@ import apiClient from "../services/apiClient";
 
 const ProductDetailsPage = () => {
   const { productId } = useParams();
-  const [productData, setProductData] = useState([]);
+  const [productData, setProductData] = useState(null);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scroll(0, 0);
@@ -27,7 +25,7 @@ const ProductDetailsPage = () => {
 
         // Ensure payload has expected structure
         if (!payload || !payload.id) {
-          setError("Product not found");
+          ToastMessages.showError("Product not found");
           return;
         }
 
@@ -45,11 +43,7 @@ const ProductDetailsPage = () => {
         setProductData({ product: payload });
       } catch (error) {
         console.error("Product fetch error:", error);
-        setError(
-          ToastMessages.showError("Failed to load product details Information.")
-        );
-      } finally {
-        setLoading(false);
+        ToastMessages.showError("Failed to load product details Information.");
       }
     };
 

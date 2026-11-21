@@ -12,7 +12,6 @@ import { Link, useNavigate } from "react-router-dom";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ToastMessages from "../../toast-messages/toast";
-import { AuthContext } from "../../utils/AuthContext";
 import { CartContext } from "../../utils/CartContext";
 import "../../assets/css/AmazonProductPage.css";
 import EnhancedSuggestedProduct from "./EnhancedSuggestedProduct";
@@ -31,6 +30,8 @@ const EnhancedProductDetails = ({ productData, message }) => {
   useEffect(() => {
     if (product?.images?.length) {
       setPreviewImg(product.images[0]?.url || product.images[0]);
+    } else if (product?.image) {
+      setPreviewImg(product.image);
     }
     if (product?.color?.length) {
       setSelectedColor(product.color[0]?.name || product.color[0]);

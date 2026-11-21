@@ -29,9 +29,11 @@ const ProductSection = ({
 
   if (loading) {
     return (
-      <Container fluid className="my-5">
-        <div className="section-title text-center mb-4">
-          <h2>{title}</h2>
+      <Container className="my-5">
+        <div className="ecom-section-header">
+          <div>
+            <h2 className="ecom-section-title">{title}</h2>
+          </div>
         </div>
         <Row>
           <ProductSkeleton count={8} />
@@ -45,11 +47,14 @@ const ProductSection = ({
   }
 
   return (
-    <Container fluid className="my-5">
-      <div className="section-title text-center mb-4">
-        <h2>{title}</h2>
+    <Container className="my-5">
+      <div className="ecom-section-header">
+        <div>
+          <h2 className="ecom-section-title">{title}</h2>
+          <p className="ecom-section-subtitle">Handpicked top-rated items updated daily</p>
+        </div>
       </div>
-      <Row className="g-0">
+      <Row className="g-2">
         {productArray.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

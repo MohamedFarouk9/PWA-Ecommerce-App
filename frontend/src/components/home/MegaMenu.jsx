@@ -1,64 +1,62 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const MegaMenu = ({ data = [] }) => {
-  // Define the event handler function separately
-  const handleAccordionClick = (event) => {
-    // Toggle the active class on the clicked accordion button
-    event.currentTarget.classList.toggle("active");
+  const [openIndex, setOpenIndex] = useState(null);
 
-    // Get the panel next to the clicked accordion button
-    const panel = event.currentTarget.nextElementSibling;
-    if (panel.style.maxHeight) {
-      panel.style.maxHeight = null; // Close the panel
-    } else {
-      panel.style.maxHeight = panel.scrollHeight + "px"; // Open the panel with smooth transition
-    }
+  const toggleIndex = (idx) => {
+    setOpenIndex((prev) => (prev === idx ? null : idx));
   };
 
-  useEffect(() => {
-    const acc = document.getElementsByClassName("accordion");
-
-    // Add event listeners
-    for (let i = 0; i < acc.length; i++) {
-      acc[i].addEventListener("click", handleAccordionClick);
-    }
-
-    // Cleanup function to remove event listeners on component unmount
-    return () => {
-      for (let i = 0; i < acc.length; i++) {
-        acc[i].removeEventListener("click", handleAccordionClick);
-      }
-    };
-  }, []); // Empty dependency array to run only on mount and unmount
-
   return (
-    <div className="accordionMenuDiv">
-      <div className="accordionMenuDivInside">
-        {data.map((item, index) => (
-          <div key={index}>
-            <button className="accordion">
-              <img
-                className="accordionMenuIcon"
-                // src={item.category_image}
-                src="https://img.icons8.com/?size=50&id=53386&format=png"
-                alt="icon"
-              />
-              &nbsp; {item.name}
-            </button>
-            <div className="panel">
-              <ul>
-                {item.children.map((subcategory, subIndex) => (
-                  <li key={subIndex}>
-                    <Link to={`/${item.slug}/${subcategory.slug}`} className="accordionItem">
-                      {subcategory.name}
+    <div className="ecom-megamenu-card">
+      <div className="ecom-megamenu-header">
+        <i className="fa fa-th-large"></i>
+        <span>Browse Categories</span>
+      </div>
+      <div className="ecom-megamenu-list">
+        {data.map((item, index) => {
+          const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+          const isOpen = openIndex === index;
+
+          return (
+            <div key={item.id || index} className="ecom-megamenu-item">
+              <button
+                type="button"
+                className={`ecom-megamenu-btn ${isOpen ? "active" : ""}`}
+                onClick={() => toggleIndex(index)}
+              >
+                <span className="d-flex align-items-center gap-2">
+                  <i className="fa fa-tag text-primary" style={{ fontSize: "12px" }}></i>
+                  <span>{item.name}</span>
+                </span>
+                {hasChildren && (
+                  <i
+                    className={`fa fa-chevron-${isOpen ? "down" : "right"}`}
+                    style={{ fontSize: "11px", opacity: 0.65 }}
+                  ></i>
+                )}
+              </button>
+
+              {hasChildren && isOpen && (
+                <ul className="ecom-megamenu-sub">
+                  <li>
+                    <Link to={`/${item.slug}`} className="fw-semibold text-primary">
+                      All {item.name}
                     </Link>
                   </li>
-                ))}
-              </ul>
+                  {item.children.map((subcategory, subIndex) => (
+                    <li key={subcategory.id || subIndex}>
+                      <Link to={`/${item.slug}/${subcategory.slug}`}>
+                        {subcategory.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

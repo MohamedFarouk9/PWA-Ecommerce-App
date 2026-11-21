@@ -1,5 +1,5 @@
 import React from "react";
-import { Col, Container, Row, Spinner } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import Apple from "../../assets/images/apple.png";
 import Google from "../../assets/images/google.png";
@@ -10,103 +10,84 @@ const FooterDesktop = () => {
   const { settings, isLoading } = useSiteSettings();
 
   return (
-    <>
-      <div className="footerback m-0 mt-5 pt-3 shadow-sm">
-        <Container>
-          <Row className="px-0 my-5">
-            <Col className="p-2" lg={3} md={3} sm={6} xs={12}>
-              {isLoading ? (
-                <Spinner
-                  animation="border"
-                  variant="primary"
-                  role="status"
-                  className="d-block mx-auto my-3"
-                >
-                  <span className="sr-only">Loading...</span>
-                </Spinner>
-              ) : (
-                <>
-                  <h5 className="footer-menu-title">OFFICE ADDRESS</h5>
-                  {safeParse(settings.address)}
-                  <h5 className="footer-menu-title">SOCIAL LINK</h5>
-                  <a href={settings.facebookLink} target="_blank" rel="noreferrer">
-                    <i className="fab m-1 h4 fa-facebook"></i>
-                  </a>
-                  <a href={settings.instagramLink} target="_blank" rel="noreferrer">
-                    <i className="fab m-1 h4 fa-instagram"></i>
-                  </a>
-                  <a href={settings.twitterLink} target="_blank" rel="noreferrer">
-                    <i className="fab m-1 h4 fa-twitter"></i>
-                  </a>
-                </>
-              )}
-            </Col>
-
-            <Col className="p-2" lg={3} md={3} sm={6} xs={12}>
-              <h5 className="footer-menu-title">THE COMPANY</h5>
-              <Link to="/content/about" className="footer-link">
-                About Us
-              </Link>
-              <br />
-              <Link to="/" className="footer-link">
-                Company Profile
-              </Link>
-              <br />
-              <Link to="/contact" className="footer-link">
-                Contact Us
-              </Link>
-              <br />
-            </Col>
-
-            <Col className="p-2" lg={3} md={3} sm={6} xs={12}>
-              <h5 className="footer-menu-title">MORE INFO</h5>
-              <Link to="/content/purchase_guide" className="footer-link">
-                Purchase Guide
-              </Link>
-              <br />
-              <Link to="/content/privacy" className="footer-link">
-                Privacy Policy
-              </Link>
-              <br />
-              <Link to="/content/refund" className="footer-link">
-                Refund Policy
-              </Link>
-              <br />
-            </Col>
-
-            <Col className="p-2" lg={3} md={3} sm={6} xs={12}>
-              <h5 className="footer-menu-title">DOWNLOAD APPS</h5>
-              <a
-                href={settings.androidAppLink}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img src={Google} alt="Download on Google Play" />
+    <footer className="ecom-footer">
+      <Container>
+        <Row className="g-4">
+          <Col lg={4} md={6} sm={12}>
+            <h5 className="ecom-footer-title">About Our Store</h5>
+            <p className="text-secondary mb-3" style={{ lineHeight: 1.7 }}>
+              Your destination for flagship electronics, modern fashion, and everyday essentials with fast delivery and 30-day buyer protection.
+            </p>
+            {!isLoading && (
+              <div className="small text-secondary mb-3">
+                {safeParse(settings.address)}
+              </div>
+            )}
+            <div className="ecom-social-list">
+              <a href={settings.facebookLink || "#"} target="_blank" rel="noreferrer" className="ecom-social-btn">
+                <i className="fab fa-facebook-f"></i>
               </a>
-              <br />
-              <a href={settings.iosAppLink} target="_blank" rel="noopener noreferrer">
-                <img
-                  className="mt-2"
-                  src={Apple}
-                  alt="Download on the App Store"
-                />
+              <a href={settings.instagramLink || "#"} target="_blank" rel="noreferrer" className="ecom-social-btn">
+                <i className="fab fa-instagram"></i>
               </a>
-              <br />
+              <a href={settings.twitterLink || "#"} target="_blank" rel="noreferrer" className="ecom-social-btn">
+                <i className="fab fa-twitter"></i>
+              </a>
+            </div>
+          </Col>
 
-              <div id="google_translate_element"></div>
-            </Col>
-          </Row>
-        </Container>
+          <Col lg={2} md={6} sm={6}>
+            <h5 className="ecom-footer-title">Company</h5>
+            <ul className="ecom-footer-links">
+              <li><Link to="/content/about">About Us</Link></li>
+              <li><Link to="/">Store Directory</Link></li>
+              <li><Link to="/contact">Contact Support</Link></li>
+              <li><Link to="/orders">Track My Order</Link></li>
+            </ul>
+          </Col>
 
-        <Container fluid={true} className="text-center m-0 pt-3 pb-1 bg-dark">
-          <Container>
-            <Row>
-              <h6 className="text-white">{safeParse(settings.copyrightText)}</h6>
-            </Row>
-          </Container>
+          <Col lg={3} md={6} sm={6}>
+            <h5 className="ecom-footer-title">Customer Care</h5>
+            <ul className="ecom-footer-links">
+              <li><Link to="/content/purchase_guide">How to Order</Link></li>
+              <li><Link to="/content/privacy">Privacy Policy</Link></li>
+              <li><Link to="/content/refund">Returns & Refunds</Link></li>
+              <li><Link to="/favourite">Saved Wishlist</Link></li>
+            </ul>
+          </Col>
+
+          <Col lg={3} md={6} sm={12}>
+            <h5 className="ecom-footer-title">Shop On The Go</h5>
+            <p className="text-secondary small mb-3">
+              Download our mobile app for exclusive app-only flash deals and real-time order notifications.
+            </p>
+            <div className="d-flex flex-column gap-2 align-items-start">
+              <a href={settings.androidAppLink || "#"} target="_blank" rel="noopener noreferrer">
+                <img src={Google} alt="Google Play" style={{ height: "40px", borderRadius: "8px" }} />
+              </a>
+              <a href={settings.iosAppLink || "#"} target="_blank" rel="noopener noreferrer">
+                <img src={Apple} alt="App Store" style={{ height: "40px", borderRadius: "8px" }} />
+              </a>
+            </div>
+            <div id="google_translate_element" className="mt-3"></div>
+          </Col>
+        </Row>
+      </Container>
+
+      <div className="ecom-footer-bottom">
+        <Container className="d-flex flex-wrap justify-content-between align-items-center">
+          <div>
+            {safeParse(settings.copyrightText) || `© ${new Date().getFullYear()} All Rights Reserved.`}
+          </div>
+          <div className="d-flex gap-3">
+            <span><i className="fab fa-cc-visa fa-lg"></i></span>
+            <span><i className="fab fa-cc-mastercard fa-lg"></i></span>
+            <span><i className="fab fa-cc-paypal fa-lg"></i></span>
+            <span><i className="fab fa-cc-apple-pay fa-lg"></i></span>
+          </div>
         </Container>
       </div>
-    </>
+    </footer>
   );
 };
 

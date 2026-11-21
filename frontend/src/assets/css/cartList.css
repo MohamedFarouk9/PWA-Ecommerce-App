@@ -1,5 +1,95 @@
-.cart-product-img{
-    width: 80px;
-    height: 110px;
-    margin-left: 80px;
+/* ==========================================================================
+   cartList.css — Shopping Cart, Order Summary & Checkout Cards
+   ========================================================================== */
+
+.ecom-cart-item-card {
+  background: #ffffff;
+  border: 1px solid var(--ecom-border);
+  border-radius: var(--ecom-radius);
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: var(--ecom-shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.ecom-cart-item-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--ecom-shadow-md);
+}
+
+.cart-product-img,
+.ecom-cart-thumb {
+  width: 96px !important;
+  height: 96px !important;
+  object-fit: cover !important;
+  border-radius: var(--ecom-radius-sm);
+  background: #f8fafc;
+  border: 1px solid var(--ecom-border);
+  margin: 0;
+}
+
+.ecom-qty-group {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ecom-border);
+  border-radius: var(--ecom-radius-sm);
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.ecom-qty-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  font-weight: 700;
+  color: var(--ecom-slate);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.ecom-qty-btn:hover {
+  background: #e2e8f0;
+  color: var(--ecom-dark);
+}
+
+.ecom-qty-val {
+  min-width: 38px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ecom-dark);
+}
+
+.ecom-summary-card {
+  background: #ffffff;
+  border: 1px solid var(--ecom-border);
+  border-radius: var(--ecom-radius);
+  padding: 24px;
+  box-shadow: var(--ecom-shadow-sm);
+  position: sticky;
+  top: 90px;
+}
+
+.ecom-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--ecom-slate);
+}
+
+.ecom-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid var(--ecom-border);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ecom-dark);
 }

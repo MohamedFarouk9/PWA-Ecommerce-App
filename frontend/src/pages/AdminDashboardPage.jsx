@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Button, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Badge, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/apiClient';
 import NavMenuDesktop from '../components/common/NavMenuDesktop';

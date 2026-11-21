@@ -2,7 +2,6 @@ import React from "react";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
 import { Link } from "react-router-dom";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -12,14 +11,12 @@ function Categories({ categories: propCategories }) {
   const { data: hookCategories, loading, error } = useCategories('all');
   const categories = propCategories || hookCategories || [];
 
-  const renderSkeletons = Array.from({ length: 12 }).map((_, index) => (
-    <Col key={index} className="p-0" xl={2} lg={2} md={2} sm={6} xs={6}>
-      <Card className="h-100 w-100 text-center">
-        <Card.Body>
-          <Skeleton height={120} />
-          <Skeleton width={`60%`} style={{ marginTop: 10 }} />
-        </Card.Body>
-      </Card>
+  const renderSkeletons = Array.from({ length: 6 }).map((_, index) => (
+    <Col key={index} xl={2} lg={2} md={3} sm={4} xs={6}>
+      <div className="ecom-category-card">
+        <Skeleton circle width={84} height={84} className="mb-2" />
+        <Skeleton width={90} height={16} />
+      </div>
     </Col>
   ));
 
@@ -43,26 +40,39 @@ function Categories({ categories: propCategories }) {
   }
 
   return (
-    <Container className="text-center" fluid={true}>
-      <div className="section-title text-center mb-55">
-        <h2>Categories</h2>
-        <p>Some Of Our Exclusive Collections, You Need To See</p>
+    <Container className="my-5">
+      <div className="ecom-section-header">
+        <div>
+          <h2 className="ecom-section-title">Shop by Category</h2>
+          <p className="ecom-section-subtitle">Explore our curated collections across top departments</p>
+        </div>
       </div>
-      <Row>
+      <Row className="g-3">
         {categories.map((category, index) => (
-          <Col key={category.id || index} className="p-0" xl={2} lg={2} md={2} sm={6} xs={6}>
-            <Link className="text-link" to={`/${category.slug || category.category_name || ''}`}>
-              <Card className="h-100 w-100 text-center">
-                <Card.Body>
-                  <Card.Img
-                    className="center"
-                    src={category.image || category.category_image || "https://img.icons8.com/?size=100&id=20822&format=png"}
-                    alt={category.name || category.category_name}
-                    loading="lazy"
-                  />
-                  <h5 className="category-name">{category.name || category.category_name}</h5>
-                </Card.Body>
-              </Card>
+          <Col key={category.id || index} xl={2} lg={2} md={3} sm={4} xs={6}>
+            <Link
+              className="ecom-category-card"
+              to={`/${category.slug || category.category_name || ''}`}
+            >
+              <div className="ecom-category-img-wrap">
+                <img
+                  className="ecom-category-img"
+                  src={
+                    category.image ||
+                    category.category_image ||
+                    "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80"
+                  }
+                  alt={category.name || category.category_name}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80";
+                  }}
+                />
+              </div>
+              <h6 className="ecom-category-title">
+                {category.name || category.category_name}
+              </h6>
             </Link>
           </Col>
         ))}

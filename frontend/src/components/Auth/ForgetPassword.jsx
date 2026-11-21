@@ -1,79 +1,92 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import Forget from "../../assets/images/forget.jpg";
+import { Link } from "react-router-dom";
 import ToastMessages from "../../toast-messages/toast";
 import axios from "axios";
 import AppURL from "../../utils/AppURL";
+import { ResponsiveLayout } from "../../layouts/ResponsiveLayout";
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState("");
-
-  const handleChange = (e) => {
-    setEmail(e.target.value);
-  };
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
 
     try {
-      const response = await axios.post(AppURL.ForgetPassword, {email});
+      const response = await axios.post(AppURL.ForgetPassword, { email });
       if (response.status === 200) {
         ToastMessages.showSuccess(response.data.message);
       }
-    } catch (e) {
-        ToastMessages.showWarning(e.response.data.message);
+    } catch (err) {
+      ToastMessages.showWarning(
+        err.response?.data?.message || "Unable to send reset link."
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <Container>
-      <Row className="p-2">
-        <Col
-          className="shadow-sm bg-white mt-2"
-          md={12}
-          lg={12}
-          sm={12}
-          xs={12}
-        >
-          <Row className="text-center">
-            <Col
-              className="d-flex justify-content-center"
-              md={6}
-              lg={6}
-              sm={12}
-              xs={12}
-            >
+    <ResponsiveLayout>
+      <Container className="py-4">
+        <div className="ecom-auth-card">
+          <Row className="g-0">
+            <Col lg={6} md={6} sm={12} className="ecom-auth-form-col">
               <Form className="onboardForm" onSubmit={handleSubmit}>
-                <h4 className="section-title-login"> FORGET PASSWORD ? </h4>
-                <input
-                  className="form-control m-2"
-                  type="email"
-                  placeholder="Enter Your Email"
-                  value={email}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="mb-4 text-start">
+                  <span className="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-1 rounded-pill">
+                    Password Recovery
+                  </span>
+                  <h3 className="section-title-login">Forgot Your Password?</h3>
+                  <p className="section-sub-title mb-0">
+                    Enter your registered email address and we'll send you a password reset link.
+                  </p>
+                </div>
+
+                <div className="mb-3 text-start">
+                  <label className="ecom-form-label">Email Address</label>
+                  <input
+                    className="form-control ecom-form-control"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
                 <Button
-                  className="btn btn-block m-2 site-btn-login"
+                  className="site-btn-login w-100 mt-2"
                   type="submit"
+                  disabled={submitting}
                 >
-                  {" "}
-                  Reset Password{" "}
+                  <i className="fa fa-paper-plane"></i>
+                  <span>{submitting ? "Sending Link..." : "Send Reset Link"}</span>
                 </Button>
 
+                <div className="text-center mt-4 pt-3 border-top small text-muted">
+                  Remembered your password?{" "}
+                  <Link to="/login" className="text-primary fw-bold text-decoration-none">
+                    Back to Sign In
+                  </Link>
+                </div>
               </Form>
             </Col>
-            <Col className="p-0 Desktop m-0" md={6} lg={6} sm={6} xs={6}>
-              <img
-                className="onboardBanner"
-                src={Forget}
-                alt="Forget Password"
-              />
+
+            <Col lg={6} md={6} className="d-none d-md-flex ecom-auth-visual-col">
+              <div className="pe-lg-4">
+                <h2 className="fw-bold mb-3">Quick & Secure Account Recovery</h2>
+                <p className="text-light opacity-75 mb-0">
+                  We protect your account with encrypted reset tokens. Check your inbox (and spam folder) after submitting.
+                </p>
+              </div>
             </Col>
           </Row>
-        </Col>
-      </Row>
-    </Container>
+        </div>
+      </Container>
+    </ResponsiveLayout>
   );
 };
 

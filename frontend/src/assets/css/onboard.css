@@ -1,10 +1,75 @@
-.onboardBanner{
-    width: 100% !important;
-    height: auto;
-    object-fit: cover;
+/* ==========================================================================
+   onboard.css — Auth Cards (Login, Register, Password Reset) & Contact Page
+   ========================================================================== */
+
+.ecom-auth-card {
+  background: #ffffff;
+  border-radius: var(--ecom-radius);
+  border: 1px solid var(--ecom-border);
+  box-shadow: var(--ecom-shadow-md);
+  overflow: hidden;
+  margin: 32px 0;
 }
-.onboardForm{
-    margin-top: 70px;
-    margin-bottom: 70px;
-    width: 90%;
+
+.ecom-auth-form-col {
+  padding: 44px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ecom-auth-visual-col {
+  position: relative;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  color: #ffffff;
+  padding: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ecom-auth-visual-img,
+.onboardBanner {
+  width: 100% !important;
+  height: 100%;
+  min-height: 360px;
+  object-fit: cover;
+  border-radius: var(--ecom-radius-sm);
+}
+
+.ecom-form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ecom-slate);
+  margin-bottom: 6px;
+  display: block;
+  text-align: left;
+}
+
+.ecom-form-control {
+  border-radius: var(--ecom-radius-sm) !important;
+  border: 1.5px solid var(--ecom-border) !important;
+  padding: 11px 14px !important;
+  font-size: 14px !important;
+  background-color: #f8fafc !important;
+  transition: all 0.2s ease !important;
+}
+
+.ecom-form-control:focus {
+  background-color: #ffffff !important;
+  border-color: var(--ecom-primary) !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
+}
+
+.onboardForm {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+@media (max-width: 767.98px) {
+  .ecom-auth-form-col {
+    padding: 28px 20px;
+  }
 }

@@ -59,16 +59,20 @@ const ContentPage = ({ type, title, extraContent }) => {
     }
 
     return (
-        <Container className="py-5">
+        <Container className="py-4">
+            <div className="ecom-section-header">
+                <div>
+                    <h2 className="ecom-section-title">{title}</h2>
+                    <p className="ecom-section-subtitle">Official store policy and customer guidelines</p>
+                </div>
+            </div>
             <Row className="justify-content-center">
-                <Col md={10}>
-                    <Card className="border-0 shadow-sm">
-                        <Card.Header className="bg-white">
-                            <h2 className="mb-0">{title}</h2>
-                        </Card.Header>
+                <Col md={12}>
+                    <Card className="p-3">
                         <Card.Body>
                             <div 
                                 className="content-body"
+                                style={{ lineHeight: 1.75 }}
                                 dangerouslySetInnerHTML={{ __html: content }} 
                             />
                             {extraContent}
