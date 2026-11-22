@@ -1,6 +1,6 @@
-# Asynchronous Event-Driven Architecture with RabbitMQ — Complete Guide
+# Asynchronous Event-Driven Order Pipeline with RabbitMQ — Complete Guide
 
-This guide documents the complete **RabbitMQ Event-Driven Architecture** implemented in this e-commerce platform, focusing on the **Order Placed Fan-Out Pipeline (1 Event → 5 Independent Consumers)** and the **Catalog Async Pipeline (Image Optimization + Elasticsearch Sync)**.
+This guide documents the **Order Placed → RabbitMQ Fan-Out → 5 Independent Consumers** architecture implemented in this e-commerce platform.
 
 ---
 
@@ -92,14 +92,7 @@ sequenceDiagram
 
 ---
 
-## 4. Bonus Pipeline: Async Product Catalog (`catalog.topic`)
-In addition to the 5 Order Placed consumers, the same RabbitMQ infrastructure also offloads Admin product uploads:
-- **`worker:image-optimizer`** (`catalog.image.optimize.queue`, prefetch `2`) — Generates 4 WebP sizes + 4 JPEG/PNG fallbacks + blur placeholder off the HTTP thread (`Admin\ProductController` saves only the raw original in `< 20ms`).
-- **`worker:search-sync`** (`catalog.search.sync.queue`, prefetch `20`) — Asynchronously upserts/deletes products in Elasticsearch on create/update/delete.
-
----
-
-## 5. How to Provision, Run & Test Locally
+## 4. How to Provision, Run & Test Locally
 
 ```powershell
 # 1. Start RabbitMQ broker (Management UI: http://localhost:15672 | guest / guest)
