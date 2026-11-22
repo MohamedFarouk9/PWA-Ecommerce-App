@@ -1,153 +1,126 @@
 <?php
 
 return [
-    'host'               => env('RABBITMQ_HOST', 'localhost'), // RabbitMQ server hostname/IP
-    'port'               => env('RABBITMQ_PORT', 5672),        // Default AMQP port
-    'username'           => env('RABBITMQ_USERNAME', 'guest'), // Authentication username
-    'password'           => env('RABBITMQ_PASSWORD', 'guest'), // Authentication password
-    'vhost'              => env('RABBITMQ_VHOST', '/'),        // Virtual host (like a namespace)
+    'host'               => env('RABBITMQ_HOST', 'localhost'),
+    'port'               => env('RABBITMQ_PORT', 5672),
+    'username'           => env('RABBITMQ_USERNAME', 'guest'),
+    'password'           => env('RABBITMQ_PASSWORD', 'guest'),
+    'vhost'              => env('RABBITMQ_VHOST', '/'),
 
-                                //Connection Parameters
-    'connection_timeout' => 10, // Seconds to establish connection
-    'read_write_timeout' => 30, // I/O operation timeout
-    'heartbeat'          => 60, // Heartbeat interval (keeps connection alive)
-    /*Heartbeat: Prevents firewalls from dropping idle connections. If no activity for 60s, sends a heartbeat frame */
+    'connection_timeout' => 10,
+    'read_write_timeout' => 30,
+    'heartbeat'          => 60,
 
-    // Connection pool settings
     'pool'               => [
-        'size'    => 10, // Number of concurrent connections
-        'timeout' => 30, // Timeout for acquiring a connection from the pool in seconds
+        'size'    => 10,
+        'timeout' => 30,
     ],
 
-    // Exchange and queue settings configuration
+    // Exchanges (Topic, Direct, Fanout + Dead-Letter Exchanges)
     'exchanges'          => [
         'notifications' => [
-            'notifications.topic' => [
-                'type'        => 'topic', // Routes based on pattern matching (notifications.topic)
-                'durable'     => true,    // Durable exchange survives broker restarts
-                'auto_delete' => false,   // Delete when no queues bound
-            ],
-             // Email sending - MUST survive restarts!
-            'emails.direct'       => [
-                'type'        => 'direct', // Routes based on exact routing key matching (emails.direct)
-                'durable'     => true,     // ✓ If server crashes, emails still get sent
-             // 'durable' => false,        // ✗ If server crashes, no big deal
-                'auto_delete' => false,
-            ],
-            'realtime.fanout'     => [
-                'type'        => 'fanout', // Broadcasts to ALL bound queues (realtime.fanout)
-                'durable'     => true,
-                'auto_delete' => false,
-            ],
+            'notifications.topic' => ['type' => 'topic', 'durable' => true, 'auto_delete' => false],
+            'emails.direct'       => ['type' => 'direct', 'durable' => true, 'auto_delete' => false],
+            'realtime.fanout'     => ['type' => 'fanout', 'durable' => true, 'auto_delete' => false],
+            'dlx.notifications'   => ['type' => 'direct', 'durable' => true, 'auto_delete' => false],
+        ],
+        'orders' => [
+            'orders.topic' => ['type' => 'topic', 'durable' => true, 'auto_delete' => false],
+            'dlx.orders'   => ['type' => 'direct', 'durable' => true, 'auto_delete' => false],
         ],
     ],
 
-    // Queue configurations
+    // Queues
     'queues'             => [
-        'notifications.email.queue'    => [
+        // Notifications
+        'notifications.email.queue' => [
             'durable'   => true,
             'arguments' => [
-                //Dead Letter Exchange (DLX): When messages fail (rejected/expired), they go to DLX for analysis.
-                'x-dead-letter-exchange'    => 'dlx.notifications',              // DLX for failed messages
-                'x-dead-letter-routing-key' => 'notifications.email.deadletter', // Routing for DL
-                'x-message-ttl'             => 3600000,                          // Messages expire after 1h (ms)
+                'x-dead-letter-exchange'    => 'dlx.notifications',
+                'x-dead-letter-routing-key' => 'notifications.email.deadletter',
+                'x-message-ttl'             => 3600000,
             ],
         ],
-        'notifications.sms.queue'      => [
+        'notifications.sms.queue' => [
+            'durable'   => true,
+            'arguments' => ['x-dead-letter-exchange' => 'dlx.notifications'],
+        ],
+        'notifications.realtime.queue'   => ['durable' => false, 'arguments' => []],
+        'notifications.database.queue'   => ['durable' => true, 'arguments' => []],
+        'notifications.deadletter.queue' => ['durable' => true, 'arguments' => []],
+
+        // Order Placed Fan-Out Queues (1 event -> 5 independent consumers)
+        'orders.email.queue' => [
             'durable'   => true,
             'arguments' => [
-                'x-dead-letter-exchange' => 'dlx.notifications',
+                'x-dead-letter-exchange'    => 'dlx.orders',
+                'x-dead-letter-routing-key' => 'orders.deadletter',
+                'x-message-ttl'             => 86400000,
             ],
         ],
-        'notifications.realtime.queue' => [
-            'durable'   => false,
-            'arguments' => [],
+        'orders.invoice.queue' => [
+            'durable'   => true,
+            'arguments' => [
+                'x-dead-letter-exchange'    => 'dlx.orders',
+                'x-dead-letter-routing-key' => 'orders.deadletter',
+                'x-message-ttl'             => 86400000,
+            ],
         ],
-        'notifications.database.queue' => [
-            'durable' => true,
-            'arguments' => [],
+        'orders.inventory.queue' => [
+            'durable'   => true,
+            'arguments' => [
+                'x-dead-letter-exchange'    => 'dlx.orders',
+                'x-dead-letter-routing-key' => 'orders.deadletter',
+                'x-message-ttl'             => 86400000,
+            ],
         ],
+        'orders.admin.queue' => [
+            'durable'   => true,
+            'arguments' => [
+                'x-dead-letter-exchange'    => 'dlx.orders',
+                'x-dead-letter-routing-key' => 'orders.deadletter',
+                'x-message-ttl'             => 86400000,
+            ],
+        ],
+        'orders.analytics.queue' => [
+            'durable'   => true,
+            'arguments' => [
+                'x-dead-letter-exchange'    => 'dlx.orders',
+                'x-dead-letter-routing-key' => 'orders.deadletter',
+                'x-message-ttl'             => 86400000,
+            ],
+        ],
+        'orders.deadletter.queue' => ['durable' => true, 'arguments' => []],
     ],
 
     // Bindings (Queue -> Exchange -> Routing Key)
     'bindings' => [
-        // Email Queue Bindings
-        [
-            'queue'        => 'notifications.email.queue',
-            'exchange'     => 'notifications.topic',
-            'routing_key'  => 'notifications.email.*', // Pattern matching
-        ],
-        // SMS Queue Bindings
-        [
-            'queue'        => 'notifications.sms.queue',
-            'exchange'     => 'notifications.topic',
-            'routing_key'  => 'notifications.sms.*',
-        ],
-        // Realtime Queue Bindings
-        [
-            'queue'        => 'notifications.realtime.queue',
-            'exchange'     => 'realtime.fanout',
-            'routing_key'  => '#', // Fanout ignores routing keys
-        ],
-        // Database Queue Bindings
-        [
-            'queue'        => 'notifications.database.queue',
-            'exchange'     => 'notifications.topic',
-            'routing_key'  => 'notifications.*',
-        ],
+        // Notifications
+        ['queue' => 'notifications.email.queue', 'exchange' => 'notifications.topic', 'routing_key' => 'notifications.email.*'],
+        ['queue' => 'notifications.sms.queue', 'exchange' => 'notifications.topic', 'routing_key' => 'notifications.sms.*'],
+        ['queue' => 'notifications.realtime.queue', 'exchange' => 'realtime.fanout', 'routing_key' => '#'],
+        ['queue' => 'notifications.database.queue', 'exchange' => 'notifications.topic', 'routing_key' => 'notifications.*'],
+        ['queue' => 'notifications.deadletter.queue', 'exchange' => 'dlx.notifications', 'routing_key' => 'notifications.email.deadletter'],
+
+        // Order Placed Fan-Out (all 5 queues receive every `order.placed` event)
+        ['queue' => 'orders.email.queue', 'exchange' => 'orders.topic', 'routing_key' => 'order.placed'],
+        ['queue' => 'orders.invoice.queue', 'exchange' => 'orders.topic', 'routing_key' => 'order.placed'],
+        ['queue' => 'orders.inventory.queue', 'exchange' => 'orders.topic', 'routing_key' => 'order.placed'],
+        ['queue' => 'orders.admin.queue', 'exchange' => 'orders.topic', 'routing_key' => 'order.placed'],
+        ['queue' => 'orders.analytics.queue', 'exchange' => 'orders.topic', 'routing_key' => 'order.placed'],
+        ['queue' => 'orders.deadletter.queue', 'exchange' => 'dlx.orders', 'routing_key' => 'orders.deadletter'],
     ],
 
-    // Worker settings
+    // Worker QoS Prefetch & Retry Settings
     'workers' => [
-        'email' => [
-            'prefetch_count' => 10, // Number of messages to fetch at once (before acknowledging)
-            'timeout'        => 30, // Max processing time per message in seconds
-            'max_retries'    => 3,  // Retry attempts on failure
-            'retry_delay'   => 5,   // Seconds between retries
-        ],
-        'sms' => [
-            'prefetch_count' => 20,
-            'timeout'        => 15,
-            'max_retries'    => 2,
-            'retry_delay'   => 3,
-        ],
-        'realtime' => [
-            'prefetch_count' => 50,
-            'timeout'        => 10,
-            'max_retries'    => 1,
-            'retry_delay'   => 1,
-        ],
-        'database' => [
-            'prefetch_count' => 5,
-            'timeout'        => 60,
-            'max_retries'    => 0,  // Don't retry, save to DLQ
-            'retry_delay'   => 10,
-        ],
+        'email'                  => ['prefetch_count' => 10, 'timeout' => 30, 'max_retries' => 3, 'retry_delay' => 5],
+        'sms'                    => ['prefetch_count' => 20, 'timeout' => 15, 'max_retries' => 2, 'retry_delay' => 3],
+        'realtime'               => ['prefetch_count' => 50, 'timeout' => 10, 'max_retries' => 1, 'retry_delay' => 1],
+        'database'               => ['prefetch_count' => 5, 'timeout' => 60, 'max_retries' => 0, 'retry_delay' => 10],
+        'orders.email.queue'     => ['prefetch_count' => 10, 'timeout' => 30, 'max_retries' => 3],
+        'orders.invoice.queue'   => ['prefetch_count' => 5, 'timeout' => 45, 'max_retries' => 3],
+        'orders.inventory.queue' => ['prefetch_count' => 10, 'timeout' => 20, 'max_retries' => 3],
+        'orders.admin.queue'     => ['prefetch_count' => 20, 'timeout' => 15, 'max_retries' => 2],
+        'orders.analytics.queue' => ['prefetch_count' => 50, 'timeout' => 10, 'max_retries' => 1],
     ],
-
 ];
-
-
-
-/*Durable = true:
-
-
-RabbitMQ Restart → Looks for saved files → Loads everything → Continues
-           ↓
-Messages are saved to: /var/lib/rabbitmq/mnesia/
-
-
-Durable = false:
-
-RabbitMQ Restart → No saved files → Starts fresh → Empty queues
-           ↓
-Messages are only in RAM → POOF! Gone forever
- */
-
-//Exchange Types
-
-// 'type' => 'topic',     // Routes based on pattern matching (notifications.*)
-// 'type' => 'direct',    // Routes based on exact routing key match
-// 'type' => 'fanout',    // Broadcasts to ALL bound queues
-// 'durable' => true,     // Survives broker restart
-// 'auto_delete' => false // Delete when no queues bound
