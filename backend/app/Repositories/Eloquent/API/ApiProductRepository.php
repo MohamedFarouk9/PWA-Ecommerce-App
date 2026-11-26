@@ -2,6 +2,7 @@
 namespace App\Repositories\Eloquent\API;
 
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\Section;
 use App\Repositories\Contracts\API\ApiProductRepositoryInterface;
 use App\Services\Search\ElasticsearchService;
@@ -85,17 +86,21 @@ class ApiProductRepository implements ApiProductRepositoryInterface
     }
 
     /**
-     * Get products by category (paginated)
+     * Get products by category (paginated) — includes child subcategories when a parent department is selected.
      * ⚠️ REMOVED CACHE - Pagination with cache is problematic
      */
     public function getByCategory($categoryId, $perPage = 12)
     {
+        // Include the selected category AND any direct child subcategories
+        $childIds = ProductCategory::where('parent_id', $categoryId)->pluck('id')->all();
+        $categoryIds = array_merge([(int) $categoryId], $childIds);
+
         return $this->model
-            ->where('product_category_id', $categoryId) // Filter 1: By category
-            ->whereHas('status', function ($q) {        // Filter 2: By status
-                $q->where('name', 'published');             // Only published products
+            ->whereIn('product_category_id', $categoryIds) // Filter 1: Parent + child categories
+            ->whereHas('status', function ($q) {           // Filter 2: By status
+                $q->where('name', 'published');                // Only published products
             })
-            ->with(['category', 'tags', 'productVariants.productAttribute', 'status']) // Load for filtered results
+            ->with(['category', 'tags', 'productVariants.productAttribute', 'status', 'images'])
             ->latest()
             ->paginate($perPage);
     }
