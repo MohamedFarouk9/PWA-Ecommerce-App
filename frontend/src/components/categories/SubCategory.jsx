@@ -21,6 +21,7 @@ const SubCategory = () => {
 
     const fetchProductData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const response = await axios.get(
           AppURL.ProductBySubCategory(category_slug, subCategory_slug)

@@ -58,6 +58,29 @@ class ProductController extends Controller
     }
 
     /**
+     * Get products by parent category slug & subcategory slug
+     */
+    public function getProductBySubCategory($category_slug, $subcategory_slug)
+    {
+        $parent = ProductCategory::where('slug', $category_slug)->first();
+
+        $subcategoryQuery = ProductCategory::where('slug', $subcategory_slug);
+        if ($parent) {
+            $subcategoryQuery->where('parent_id', $parent->id);
+        }
+
+        $subcategory = $subcategoryQuery->first()
+            ?? ProductCategory::where('slug', $subcategory_slug)->first();
+
+        if (!$subcategory) {
+            return response()->json(['message' => 'Subcategory not found'], 404);
+        }
+
+        $results = $this->productRepository->getByCategory($subcategory->id, 24);
+        return ProductResource::collection($results);
+    }
+
+    /**
      * Returns all homepage sections with their products
      */
     public function homepageSections()
