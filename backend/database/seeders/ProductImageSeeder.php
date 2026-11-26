@@ -5,43 +5,56 @@ namespace Database\Seeders;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 
 class ProductImageSeeder extends Seeder
 {
     /**
-     * Seed every product with a cover image link and a 4-image gallery of direct high-resolution product links.
+     * Safe image seeder: assigns fallback Unsplash cover + gallery images ONLY to products
+     * that do not already have a real http(s) cover image or gallery images.
+     * Preserves all curated images seeded by ProductSeeder, ShowcaseProductsSeeder, and RealCatalogMLSeeder.
      */
     public function run(): void
     {
-        $this->command?->info('Assigning testing product image links to all products...');
+        $this->command?->info('ProductImageSeeder: Backfilling missing product cover & gallery images...');
 
-        $products = Product::withTrashed()->get();
         $updatedCount = 0;
 
-        foreach ($products as $product) {
-            $coverUrl = $product->getTestingImageUrl(0);
+        Product::withTrashed()->withCount('images')->chunkById(100, function ($products) use (&$updatedCount) {
+            foreach ($products as $product) {
+                $hasHttpCover = is_string($product->image) && str_starts_with($product->image, 'http');
 
-            // Set direct cover image URL on product table
-            $product->update([
-                'image' => $coverUrl,
-            ]);
+                if (!$hasHttpCover) {
+                    $product->update([
+                        'image' => $product->getTestingImageUrl(0),
+                    ]);
+                    $updatedCount++;
+                }
 
-            // Create 4 gallery image links per product
-            $product->images()->delete();
-            for ($i = 0; $i < 4; $i++) {
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'path'       => $product->getTestingImageUrl($i),
-                    'position'   => $i + 1,
-                    'is_cover'   => $i === 0,
-                ]);
+                if ($product->images_count === 0) {
+                    $coverUrl = $hasHttpCover ? $product->image : $product->getTestingImageUrl(0);
+
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'path'       => $coverUrl,
+                        'position'   => 1,
+                        'is_cover'   => true,
+                    ]);
+
+                    for ($i = 1; $i < 3; $i++) {
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'path'       => $product->getTestingImageUrl($i),
+                            'position'   => $i + 1,
+                            'is_cover'   => false,
+                        ]);
+                    }
+                }
             }
+        });
 
-            $updatedCount++;
-        }
+        Cache::flush();
 
-        \Illuminate\Support\Facades\Cache::flush();
-
-        $this->command?->info("Successfully seeded direct testing image links (cover + 4 gallery images) for {$updatedCount} products!");
+        $this->command?->info("ProductImageSeeder: Backfilled {$updatedCount} products (existing curated images preserved).");
     }
 }

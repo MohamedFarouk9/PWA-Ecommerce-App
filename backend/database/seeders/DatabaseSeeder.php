@@ -22,14 +22,15 @@ class DatabaseSeeder extends Seeder
             ProductAttributeSeeder::class,
             SectionSeeder::class,
 
-            // Products and related data
-            ProductSeeder::class,
-            ProductDetailsSeeder::class,      // NEW: Brand, SKU, color, size, specs
-            ShowcaseProductsSeeder::class,    // NEW: 10 showcase products with real images
-            ProductImageSeeder::class,        // Enhanced with real images from Picsum
-            ProductVariantSeeder::class,
-            ProductTagSeeder::class,
-            ProductReviewSeeder::class,
+            // Products and related data (553 real-world products across all 20 categories — zero Lorem Ipsum)
+            ProductSeeder::class,             // 500 realistic multi-category products + specs + Unsplash images
+            ShowcaseProductsSeeder::class,    // 10 flagship showcase products with deep specs
+            RealCatalogMLSeeder::class,       // 43 curated real-world products + 80 flagship co-purchase baskets
+            ProductDetailsSeeder::class,      // Safe backfill for any missing brand/SKU/specs
+            ProductImageSeeder::class,        // Safe backfill for any missing images (preserves curated images)
+            ProductVariantSeeder::class,      // Category-aware variants (Color/Size/Storage/Format)
+            ProductTagSeeder::class,          // Semantic & data-driven merchandising tags
+            ProductReviewSeeder::class,       // Realistic non-Lorem-Ipsum reviews & rating curve
 
             // Other data
             CartSeeder::class,
