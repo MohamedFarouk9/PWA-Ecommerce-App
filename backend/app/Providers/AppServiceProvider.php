@@ -5,6 +5,7 @@ use App\Repositories\Contracts\Admin\OrderRepositoryInterface;
 use App\Repositories\Contracts\API\ApiCategoryRepositoryInterface;
 use App\Repositories\Contracts\API\ApiProductRepositoryInterface;
 use App\Repositories\Contracts\API\ApiSliderRepositoryInterface;
+use App\Repositories\Contracts\Admin\AdminDashboardRepositoryInterface;
 use App\Repositories\Contracts\Admin\AdminNotificationRepositoryInterface;
 use App\Repositories\Contracts\Admin\AdminProductRepositoryInterface;
 use App\Repositories\Contracts\Admin\AdminSectionRepositoryInterface;
@@ -22,6 +23,7 @@ use App\Repositories\Eloquent\Admin\OrderRepository;
 use App\Repositories\Eloquent\API\ApiCategoryRepository;
 use App\Repositories\Eloquent\API\ApiProductRepository;
 use App\Repositories\Eloquent\API\ApiSliderRepository;
+use App\Repositories\Eloquent\Admin\AdminDashboardRepository;
 use App\Repositories\Eloquent\Admin\AdminNotificationRepository;
 use App\Repositories\Eloquent\Admin\AdminProductRepository;
 use App\Repositories\Eloquent\Admin\AdminSectionRepository;
@@ -50,6 +52,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             CategoryRepositoryInterface::class,
             CategoryRepository::class
+        );
+
+        // Admin Dashboard Repository Binding
+        $this->app->bind(
+            AdminDashboardRepositoryInterface::class,
+            AdminDashboardRepository::class
         );
 
         // Add to register() method:

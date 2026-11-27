@@ -43,8 +43,10 @@ Route::get('admin/login', [AuthController::class , 'loginPage'])->name('admin.lo
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Dashboard
+    // Dashboard & Business Growth Actions
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export-sales', [DashboardController::class, 'exportSalesCsv'])->name('dashboard.export-sales');
+    Route::post('/dashboard/quick-flash-sale', [DashboardController::class, 'createQuickFlashSale'])->name('dashboard.quick-flash-sale');
 
      // Admin Profile & Password
     Route::get('profile', [AdminController::class, 'AdminProfile'])->name('profile');
