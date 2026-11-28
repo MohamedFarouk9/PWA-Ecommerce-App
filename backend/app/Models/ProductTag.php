@@ -2,21 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class ProductTag extends Model
+class ProductTag extends \Modules\Catalog\Models\ProductTag
 {
-    use HasFactory;
-    public $table = 'product_tags';
-    protected $fillable = [
-        'name',
-    ];
-
-
-    public function products()
-    {
-        return $this->belongsToMany(Product::class, 'product_tag', 'product_tag_id', 'product_id');
-    }
-
 }

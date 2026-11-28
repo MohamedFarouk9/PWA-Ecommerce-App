@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use Modules\Catalog\Http\Controllers\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
-use App\Http\Controllers\Admin\ContactController;
-use App\Http\Controllers\Admin\NotificationController;
+use Modules\Marketing\Http\Controllers\ContactController;
+use Modules\Marketing\Http\Controllers\NotificationController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\CartController;
 use App\Http\Controllers\API\OrderController;
@@ -11,7 +11,7 @@ use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\SliderController;
-use App\Http\Controllers\Admin\SiteController;
+use Modules\Core\Http\Controllers\SiteController;
 use App\Models\NotificationLogs;
 use App\Services\RabbitMQ\RabbitMQConsumer;
 use Illuminate\Http\Request;
@@ -112,21 +112,21 @@ Route::prefix('admin')->middleware('auth:api')->group(function () {
     Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
     Route::post('/categories/order', [AdminCategoryController::class, 'updateOrder']);
 
-    Route::get('/sections', [\App\Http\Controllers\Admin\ProductController::class, 'sections']);
-    Route::post('/sections', [\App\Http\Controllers\Admin\ProductController::class, 'storeSection']);
-    Route::put('/sections/{section}', [\App\Http\Controllers\Admin\ProductController::class, 'updateSection']);
-    Route::delete('/sections/{section}', [\App\Http\Controllers\Admin\ProductController::class, 'destroySection']);
-    Route::post('/sections/{section}/assign-products', [\App\Http\Controllers\Admin\ProductController::class, 'assignProducts']);
-    Route::get('/sections/{section}/products', [\App\Http\Controllers\Admin\ProductController::class, 'productsBySection']);
+    Route::get('/sections', [\Modules\Catalog\Http\Controllers\ProductController::class, 'sections']);
+    Route::post('/sections', [\Modules\Catalog\Http\Controllers\ProductController::class, 'storeSection']);
+    Route::put('/sections/{section}', [\Modules\Catalog\Http\Controllers\ProductController::class, 'updateSection']);
+    Route::delete('/sections/{section}', [\Modules\Catalog\Http\Controllers\ProductController::class, 'destroySection']);
+    Route::post('/sections/{section}/assign-products', [\Modules\Catalog\Http\Controllers\ProductController::class, 'assignProducts']);
+    Route::get('/sections/{section}/products', [\Modules\Catalog\Http\Controllers\ProductController::class, 'productsBySection']);
 
     // Product Image Management
     Route::prefix('products/{productId}/images')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\ProductImageController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\Admin\ProductImageController::class, 'store']);
-        Route::put('/{imageId}', [\App\Http\Controllers\Admin\ProductImageController::class, 'update']);
-        Route::delete('/{imageId}', [\App\Http\Controllers\Admin\ProductImageController::class, 'destroy']);
-        Route::post('/reorder', [\App\Http\Controllers\Admin\ProductImageController::class, 'reorder']);
-        Route::post('/{imageId}/cover', [\App\Http\Controllers\Admin\ProductImageController::class, 'setCover']);
+        Route::get('/', [\Modules\Catalog\Http\Controllers\ProductImageController::class, 'index']);
+        Route::post('/', [\Modules\Catalog\Http\Controllers\ProductImageController::class, 'store']);
+        Route::put('/{imageId}', [\Modules\Catalog\Http\Controllers\ProductImageController::class, 'update']);
+        Route::delete('/{imageId}', [\Modules\Catalog\Http\Controllers\ProductImageController::class, 'destroy']);
+        Route::post('/reorder', [\Modules\Catalog\Http\Controllers\ProductImageController::class, 'reorder']);
+        Route::post('/{imageId}/cover', [\Modules\Catalog\Http\Controllers\ProductImageController::class, 'setCover']);
     });
 });
 
@@ -158,7 +158,7 @@ Route::get('/health/notifications', function () {
 
 // Admin API endpoints (accessible for dashboard frontend)
 Route::prefix('admin')->group(function () {
-    Route::get('/dashboard/stats', [\App\Http\Controllers\Admin\DashboardController::class, 'stats']);
-    Route::get('/search', [\App\Http\Controllers\Admin\DashboardController::class, 'search']);
-    Route::apiResource('users', \App\Http\Controllers\Admin\UserController::class);
+    Route::get('/dashboard/stats', [\Modules\Dashboard\Http\Controllers\DashboardController::class, 'stats']);
+    Route::get('/search', [\Modules\Dashboard\Http\Controllers\DashboardController::class, 'search']);
+    Route::apiResource('users', \Modules\Customers\Http\Controllers\UserController::class);
 });

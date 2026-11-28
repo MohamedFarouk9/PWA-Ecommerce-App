@@ -3,11 +3,11 @@
 namespace App\Providers;
 
 use App\Events\Notifications\OrderCreated;
-use App\Listeners\Notifications\SendOrderCreatedNotification;
-use App\Listeners\Orders\PublishOrderPlacedToRabbitMQ;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Modules\Sales\Listeners\PublishOrderPlacedToRabbitMQ;
+use Modules\Sales\Listeners\SendOrderCreatedNotification;
 
 class EventServiceProvider extends ServiceProvider
 {

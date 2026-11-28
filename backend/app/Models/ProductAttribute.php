@@ -2,11 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class ProductAttribute extends Model
+class ProductAttribute extends \Modules\Catalog\Models\ProductAttribute
 {
-    use HasFactory;
-    protected $fillable = ['name'];
 }

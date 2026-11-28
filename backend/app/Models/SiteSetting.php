@@ -1,19 +1,7 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class SiteSetting extends Model
+class SiteSetting extends \Modules\Core\Models\SiteSetting
 {
-    use HasFactory;
-    protected $table    = 'site_settings';
-    protected $fillable = [
-        'key',
-        'value',
-    ];
-
-    protected $casts = [
-        'value' => 'string',
-    ];
 }
